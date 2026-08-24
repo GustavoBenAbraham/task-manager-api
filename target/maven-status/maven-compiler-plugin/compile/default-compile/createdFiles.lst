@@ -1,0 +1,16 @@
+com\gustavo\taskmanager\dto\TaskResponseDTO$TaskResponseDTOBuilder.class
+com\gustavo\taskmanager\exception\TaskNotFoundException.class
+com\gustavo\taskmanager\service\TaskService.class
+com\gustavo\taskmanager\model\Task.class
+com\gustavo\taskmanager\model\Task$TaskBuilder.class
+com\gustavo\taskmanager\controller\TaskController.class
+com\gustavo\taskmanager\config\CorsConfig.class
+com\gustavo\taskmanager\dto\TaskRequestDTO$TaskRequestDTOBuilder.class
+com\gustavo\taskmanager\exception\ErrorResponse.class
+com\gustavo\taskmanager\dto\TaskRequestDTO.class
+com\gustavo\taskmanager\dto\TaskResponseDTO.class
+com\gustavo\taskmanager\repository\TaskRepository.class
+com\gustavo\taskmanager\service\impl\TaskServiceImpl.class
+com\gustavo\taskmanager\model\TaskStatus.class
+com\gustavo\taskmanager\TaskmanagerApplication.class
+com\gustavo\taskmanager\exception\GlobalExceptionHandler.class

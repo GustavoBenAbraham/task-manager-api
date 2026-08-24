@@ -1,0 +1,13 @@
+C:\Users\helle\OneDrive\Área de Trabalho\task-manager-api\src\main\java\com\gustavo\taskmanager\config\CorsConfig.java
+C:\Users\helle\OneDrive\Área de Trabalho\task-manager-api\src\main\java\com\gustavo\taskmanager\controller\TaskController.java
+C:\Users\helle\OneDrive\Área de Trabalho\task-manager-api\src\main\java\com\gustavo\taskmanager\dto\TaskRequestDTO.java
+C:\Users\helle\OneDrive\Área de Trabalho\task-manager-api\src\main\java\com\gustavo\taskmanager\dto\TaskResponseDTO.java
+C:\Users\helle\OneDrive\Área de Trabalho\task-manager-api\src\main\java\com\gustavo\taskmanager\exception\ErrorResponse.java
+C:\Users\helle\OneDrive\Área de Trabalho\task-manager-api\src\main\java\com\gustavo\taskmanager\exception\GlobalExceptionHandler.java
+C:\Users\helle\OneDrive\Área de Trabalho\task-manager-api\src\main\java\com\gustavo\taskmanager\exception\TaskNotFoundException.java
+C:\Users\helle\OneDrive\Área de Trabalho\task-manager-api\src\main\java\com\gustavo\taskmanager\model\Task.java
+C:\Users\helle\OneDrive\Área de Trabalho\task-manager-api\src\main\java\com\gustavo\taskmanager\model\TaskStatus.java
+C:\Users\helle\OneDrive\Área de Trabalho\task-manager-api\src\main\java\com\gustavo\taskmanager\repository\TaskRepository.java
+C:\Users\helle\OneDrive\Área de Trabalho\task-manager-api\src\main\java\com\gustavo\taskmanager\service\impl\TaskServiceImpl.java
+C:\Users\helle\OneDrive\Área de Trabalho\task-manager-api\src\main\java\com\gustavo\taskmanager\service\TaskService.java
+C:\Users\helle\OneDrive\Área de Trabalho\task-manager-api\src\main\java\com\gustavo\taskmanager\TaskmanagerApplication.java
