@@ -12,6 +12,9 @@
 ## ✨ Funcionalidades
 
 - ✅ **CRUD completo** de tarefas (Criar, Listar, Buscar, Atualizar, Deletar)
+- ✅ **Lançamentos financeiros** de receitas e despesas
+- ✅ **Valores monetários** com precisão decimal usando `BigDecimal`
+- ✅ **Filtro de lançamentos** por tipo (`RECEITA` ou `DESPESA`)
 - ✅ **Validação** de dados com Bean Validation
 - ✅ **Tratamento de erros** profissional com respostas JSON
 - ✅ **Filtro por status** (PENDENTE, EM_ANDAMENTO, CONCLUIDA, CANCELADA)
@@ -101,6 +104,30 @@ No Windows PowerShell, use `./mvnw.cmd test`.
 | GET | `/api/v1/tasks/status/{status}` | Filtrar por status (`PENDENTE`, `EM_ANDAMENTO`, `CONCLUIDA`, `CANCELADA`) |
 | PUT | `/api/v1/tasks/{id}` | Atualizar tarefa |
 | DELETE | `/api/v1/tasks/{id}` | Deletar tarefa |
+
+### Lançamentos financeiros
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| POST | `/api/v1/lancamentos` | Criar receita ou despesa |
+| GET | `/api/v1/lancamentos` | Listar lançamentos por data |
+| GET | `/api/v1/lancamentos/{id}` | Buscar lançamento por ID |
+| GET | `/api/v1/lancamentos/tipo/{tipo}` | Filtrar por tipo |
+| PUT | `/api/v1/lancamentos/{id}` | Atualizar lançamento |
+| DELETE | `/api/v1/lancamentos/{id}` | Deletar lançamento |
+
+Exemplo de lançamento:
+
+```json
+{
+    "descricao": "Supermercado",
+    "valor": 250.75,
+    "tipo": "DESPESA",
+    "data": "2026-09-20",
+    "categoria": "Alimentação",
+    "observacao": "Compras do mês"
+}
+```
 
 ---
 
