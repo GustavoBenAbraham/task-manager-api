@@ -3,8 +3,10 @@ package com.gustavo.taskmanager.service.impl;
 import com.gustavo.taskmanager.dto.LancamentoRequestDTO;
 import com.gustavo.taskmanager.dto.LancamentoResponseDTO;
 import com.gustavo.taskmanager.exception.LancamentoNotFoundException;
+import com.gustavo.taskmanager.model.Conta;
 import com.gustavo.taskmanager.model.Lancamento;
 import com.gustavo.taskmanager.model.TipoLancamento;
+import com.gustavo.taskmanager.repository.ContaRepository;
 import com.gustavo.taskmanager.repository.LancamentoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +29,9 @@ class LancamentoServiceImplTest {
     @Mock
     private LancamentoRepository repository;
 
+    @Mock
+    private ContaRepository contaRepository;
+
     @InjectMocks
     private LancamentoServiceImpl service;
 
@@ -38,7 +43,13 @@ class LancamentoServiceImplTest {
             .tipo(TipoLancamento.RECEITA)
             .data(LocalDate.of(2026, 9, 20))
             .categoria("Salário")
+            .contaId(1L)
             .build();
+
+        when(contaRepository.findById(1L)).thenReturn(Optional.of(Conta.builder()
+            .id(1L)
+            .nome("Conta principal")
+            .build()));
 
         when(repository.save(any(Lancamento.class))).thenAnswer(invocation -> {
             Lancamento lancamento = invocation.getArgument(0);
@@ -76,10 +87,15 @@ class LancamentoServiceImplTest {
             .tipo(TipoLancamento.DESPESA)
             .data(LocalDate.of(2026, 9, 20))
             .categoria("Moradia")
+            .contaId(1L)
             .observacao("Pagamento atualizado")
             .build();
 
         when(repository.findById(1L)).thenReturn(Optional.of(lancamento));
+        when(contaRepository.findById(1L)).thenReturn(Optional.of(Conta.builder()
+            .id(1L)
+            .nome("Conta principal")
+            .build()));
         when(repository.save(lancamento)).thenReturn(lancamento);
 
         LancamentoResponseDTO response = service.atualizar(1L, request);

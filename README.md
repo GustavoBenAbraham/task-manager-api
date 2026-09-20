@@ -116,6 +116,16 @@ No Windows PowerShell, use `./mvnw.cmd test`.
 | PUT | `/api/v1/lancamentos/{id}` | Atualizar lançamento |
 | DELETE | `/api/v1/lancamentos/{id}` | Deletar lançamento |
 
+### Contas financeiras
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| POST | `/api/v1/contas` | Criar conta |
+| GET | `/api/v1/contas` | Listar contas |
+| GET | `/api/v1/contas/{id}` | Buscar conta por ID |
+| PUT | `/api/v1/contas/{id}` | Atualizar conta |
+| PATCH | `/api/v1/contas/{id}/desativar` | Desativar conta |
+
 Exemplo de lançamento:
 
 ```json
@@ -125,6 +135,7 @@ Exemplo de lançamento:
     "tipo": "DESPESA",
     "data": "2026-09-20",
     "categoria": "Alimentação",
+    "contaId": 1,
     "observacao": "Compras do mês"
 }
 ```

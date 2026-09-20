@@ -2,9 +2,12 @@ package com.gustavo.taskmanager.service.impl;
 
 import com.gustavo.taskmanager.dto.LancamentoRequestDTO;
 import com.gustavo.taskmanager.dto.LancamentoResponseDTO;
+import com.gustavo.taskmanager.exception.ContaNotFoundException;
 import com.gustavo.taskmanager.exception.LancamentoNotFoundException;
+import com.gustavo.taskmanager.model.Conta;
 import com.gustavo.taskmanager.model.Lancamento;
 import com.gustavo.taskmanager.model.TipoLancamento;
+import com.gustavo.taskmanager.repository.ContaRepository;
 import com.gustavo.taskmanager.repository.LancamentoRepository;
 import com.gustavo.taskmanager.service.LancamentoService;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +20,7 @@ import java.util.List;
 public class LancamentoServiceImpl implements LancamentoService {
 
     private final LancamentoRepository repository;
+    private final ContaRepository contaRepository;
 
     @Override
     public LancamentoResponseDTO criar(LancamentoRequestDTO dto) {
@@ -26,6 +30,7 @@ public class LancamentoServiceImpl implements LancamentoService {
             .tipo(dto.getTipo())
             .data(dto.getData())
             .categoria(dto.getCategoria())
+            .conta(buscarConta(dto.getContaId()))
             .observacao(dto.getObservacao())
             .build();
 
@@ -64,6 +69,7 @@ public class LancamentoServiceImpl implements LancamentoService {
         lancamento.setTipo(dto.getTipo());
         lancamento.setData(dto.getData());
         lancamento.setCategoria(dto.getCategoria());
+        lancamento.setConta(buscarConta(dto.getContaId()));
         lancamento.setObservacao(dto.getObservacao());
 
         return toDTO(repository.save(lancamento));
@@ -85,9 +91,16 @@ public class LancamentoServiceImpl implements LancamentoService {
             .tipo(lancamento.getTipo())
             .data(lancamento.getData())
             .categoria(lancamento.getCategoria())
+            .contaId(lancamento.getConta() != null ? lancamento.getConta().getId() : null)
+            .contaNome(lancamento.getConta() != null ? lancamento.getConta().getNome() : null)
             .observacao(lancamento.getObservacao())
             .dataCriacao(lancamento.getDataCriacao())
             .dataAtualizacao(lancamento.getDataAtualizacao())
             .build();
+    }
+
+    private Conta buscarConta(Long contaId) {
+        return contaRepository.findById(contaId)
+            .orElseThrow(() -> new ContaNotFoundException(contaId));
     }
 }

@@ -4,44 +4,35 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "lancamentos")
+@Table(name = "contas")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Lancamento {
+public class Conta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 120)
-    private String descricao;
-
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal valor;
+    @Column(nullable = false, unique = true, length = 100)
+    private String nome;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
-    private TipoLancamento tipo;
+    @Column(nullable = false, length = 20)
+    private TipoConta tipo;
+
+    @Column(name = "saldo_inicial", nullable = false, precision = 19, scale = 2)
+    @Builder.Default
+    private BigDecimal saldoInicial = BigDecimal.ZERO;
 
     @Column(nullable = false)
-    private LocalDate data;
-
-    @Column(nullable = false, length = 60)
-    private String categoria;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "conta_id")
-    private Conta conta;
-
-    @Column(length = 500)
-    private String observacao;
+    @Builder.Default
+    private boolean ativo = true;
 
     @Column(name = "data_criacao", nullable = false)
     private LocalDateTime dataCriacao;

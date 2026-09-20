@@ -35,6 +35,9 @@ public class LancamentoRequestDTO {
     @Size(max = 60, message = "A categoria deve ter no máximo 60 caracteres")
     private String categoria;
 
+    @NotNull(message = "A conta é obrigatória")
+    private Long contaId;
+
     @Size(max = 500, message = "A observação deve ter no máximo 500 caracteres")
     private String observacao;
 }

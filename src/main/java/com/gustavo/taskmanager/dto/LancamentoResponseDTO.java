@@ -19,6 +19,8 @@ public class LancamentoResponseDTO {
     private TipoLancamento tipo;
     private LocalDate data;
     private String categoria;
+    private Long contaId;
+    private String contaNome;
     private String observacao;
     private LocalDateTime dataCriacao;
     private LocalDateTime dataAtualizacao;
