@@ -4,6 +4,7 @@ import com.gustavo.taskmanager.dto.LancamentoRequestDTO;
 import com.gustavo.taskmanager.dto.LancamentoResponseDTO;
 import com.gustavo.taskmanager.exception.LancamentoNotFoundException;
 import com.gustavo.taskmanager.model.Conta;
+import com.gustavo.taskmanager.repository.CategoriaRepository;
 import com.gustavo.taskmanager.model.Lancamento;
 import com.gustavo.taskmanager.model.TipoLancamento;
 import com.gustavo.taskmanager.repository.ContaRepository;
@@ -31,6 +32,9 @@ class LancamentoServiceImplTest {
 
     @Mock
     private ContaRepository contaRepository;
+
+    @Mock
+    private CategoriaRepository categoriaRepository;
 
     @InjectMocks
     private LancamentoServiceImpl service;

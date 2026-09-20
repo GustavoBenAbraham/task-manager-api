@@ -37,6 +37,10 @@ public class Lancamento {
     private String categoria;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "categoria_id")
+    private Categoria categoriaRelacionada;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conta_id")
     private Conta conta;
 

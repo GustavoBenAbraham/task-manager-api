@@ -3,11 +3,14 @@ package com.gustavo.taskmanager.service.impl;
 import com.gustavo.taskmanager.dto.LancamentoRequestDTO;
 import com.gustavo.taskmanager.dto.LancamentoResponseDTO;
 import com.gustavo.taskmanager.exception.ContaNotFoundException;
+import com.gustavo.taskmanager.exception.CategoriaNotFoundException;
 import com.gustavo.taskmanager.exception.LancamentoNotFoundException;
+import com.gustavo.taskmanager.model.Categoria;
 import com.gustavo.taskmanager.model.Conta;
 import com.gustavo.taskmanager.model.Lancamento;
 import com.gustavo.taskmanager.model.TipoLancamento;
 import com.gustavo.taskmanager.repository.ContaRepository;
+import com.gustavo.taskmanager.repository.CategoriaRepository;
 import com.gustavo.taskmanager.repository.LancamentoRepository;
 import com.gustavo.taskmanager.service.LancamentoService;
 import lombok.RequiredArgsConstructor;
@@ -21,15 +24,18 @@ public class LancamentoServiceImpl implements LancamentoService {
 
     private final LancamentoRepository repository;
     private final ContaRepository contaRepository;
+    private final CategoriaRepository categoriaRepository;
 
     @Override
     public LancamentoResponseDTO criar(LancamentoRequestDTO dto) {
+        Categoria categoria = buscarCategoria(dto.getCategoriaId());
         Lancamento lancamento = Lancamento.builder()
             .descricao(dto.getDescricao())
             .valor(dto.getValor())
             .tipo(dto.getTipo())
             .data(dto.getData())
-            .categoria(dto.getCategoria())
+            .categoria(categoria != null ? categoria.getNome() : dto.getCategoria())
+            .categoriaRelacionada(categoria)
             .conta(buscarConta(dto.getContaId()))
             .observacao(dto.getObservacao())
             .build();
@@ -63,12 +69,14 @@ public class LancamentoServiceImpl implements LancamentoService {
     public LancamentoResponseDTO atualizar(Long id, LancamentoRequestDTO dto) {
         Lancamento lancamento = repository.findById(id)
             .orElseThrow(() -> new LancamentoNotFoundException(id));
+        Categoria categoria = buscarCategoria(dto.getCategoriaId());
 
         lancamento.setDescricao(dto.getDescricao());
         lancamento.setValor(dto.getValor());
         lancamento.setTipo(dto.getTipo());
         lancamento.setData(dto.getData());
-        lancamento.setCategoria(dto.getCategoria());
+        lancamento.setCategoria(categoria != null ? categoria.getNome() : dto.getCategoria());
+        lancamento.setCategoriaRelacionada(categoria);
         lancamento.setConta(buscarConta(dto.getContaId()));
         lancamento.setObservacao(dto.getObservacao());
 
@@ -91,6 +99,8 @@ public class LancamentoServiceImpl implements LancamentoService {
             .tipo(lancamento.getTipo())
             .data(lancamento.getData())
             .categoria(lancamento.getCategoria())
+            .categoriaId(lancamento.getCategoriaRelacionada() != null ? lancamento.getCategoriaRelacionada().getId() : null)
+            .categoriaNome(lancamento.getCategoriaRelacionada() != null ? lancamento.getCategoriaRelacionada().getNome() : null)
             .contaId(lancamento.getConta() != null ? lancamento.getConta().getId() : null)
             .contaNome(lancamento.getConta() != null ? lancamento.getConta().getNome() : null)
             .observacao(lancamento.getObservacao())
@@ -103,4 +113,13 @@ public class LancamentoServiceImpl implements LancamentoService {
         return contaRepository.findById(contaId)
             .orElseThrow(() -> new ContaNotFoundException(contaId));
     }
+
+    private Categoria buscarCategoria(Long categoriaId) {
+        if (categoriaId == null) {
+            return null;
+        }
+        return categoriaRepository.findById(categoriaId)
+            .orElseThrow(() -> new CategoriaNotFoundException(categoriaId));
+    }
+
 }
