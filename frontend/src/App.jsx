@@ -81,7 +81,7 @@ function App() {
         <div className="content-wrap">
           <section className="welcome-row">
             <div>
-              <p className="eyebrow">Sexta-feira, 20 de setembro de 2026</p>
+              <p className="eyebrow">Domingo, 20 de setembro de 2026</p>
               <h1>Seu dinheiro em movimento.</h1>
               <p className="subtitle">Uma visão clara para cada decisão do seu dia.</p>
             </div>
