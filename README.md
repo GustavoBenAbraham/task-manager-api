@@ -197,13 +197,16 @@ src/main/java/com/gustavo/taskmanager/
 
 ## 🎯 Próximos passos
 
-- [ ] Adicionar autenticação JWT
-- [ ] Ampliar testes unitários e de integração
-- [ ] Expor busca por título na API
-- [ ] Adicionar paginação nos endpoints de listagem
-- [ ] Containerização com Docker
-- [ ] CI/CD com GitHub Actions
-- [ ] Deploy na nuvem (Render)
+- [ ] Criar categorias financeiras e vinculá-las aos lançamentos
+- [ ] Implementar dashboard com saldo, receitas e despesas por período
+- [ ] Adicionar filtros por data e paginação nos lançamentos
+- [ ] Criar metas e orçamentos mensais
+- [ ] Adicionar autenticação e autorização com JWT
+- [ ] Ampliar testes unitários, de integração e dos endpoints HTTP
+- [ ] Restringir CORS e externalizar configurações sensíveis
+- [ ] Containerizar a aplicação com Docker
+- [ ] Configurar CI/CD com GitHub Actions
+- [ ] Fazer deploy na nuvem
 
 ---
 
