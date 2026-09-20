@@ -14,6 +14,7 @@
 - ✅ **CRUD completo** de tarefas (Criar, Listar, Buscar, Atualizar, Deletar)
 - ✅ **Lançamentos financeiros** de receitas e despesas
 - ✅ **Categorias financeiras** reutilizáveis
+- ✅ **Resumo financeiro por período** com receitas, despesas e saldo
 - ✅ **Valores monetários** com precisão decimal usando `BigDecimal`
 - ✅ **Filtro de lançamentos** por tipo (`RECEITA` ou `DESPESA`)
 - ✅ **Validação** de dados com Bean Validation
@@ -136,6 +137,24 @@ No Windows PowerShell, use `./mvnw.cmd test`.
 | GET | `/api/v1/categorias/{id}` | Buscar categoria por ID |
 | PUT | `/api/v1/categorias/{id}` | Atualizar categoria |
 | PATCH | `/api/v1/categorias/{id}/desativar` | Desativar categoria |
+
+### Dashboard financeiro
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/api/v1/dashboard/resumo?inicio=2026-09-01&fim=2026-09-30` | Resumo do período |
+
+Resposta:
+
+```json
+{
+    "inicio": "2026-09-01",
+    "fim": "2026-09-30",
+    "totalReceitas": 3000.00,
+    "totalDespesas": 1250.50,
+    "saldo": 1749.50
+}
+```
 
 Exemplo de lançamento:
 
