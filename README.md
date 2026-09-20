@@ -95,6 +95,20 @@ No Linux/macOS:
 
 O servidor iniciará em `http://localhost:8080`
 
+### Frontend
+
+O dashboard React fica em `frontend/` e usa Vite.
+
+Pré-requisito: Node.js 20+ e npm.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+O frontend ficará disponível em `http://localhost:5173`.
+
 ### 5. Execute os testes
 ```bash
 ./mvnw test
