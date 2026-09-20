@@ -16,6 +16,7 @@
 - ✅ **Categorias financeiras** reutilizáveis
 - ✅ **Resumo financeiro por período** com receitas, despesas e saldo
 - ✅ **Cadastro e login** com senha protegida por BCrypt e token JWT
+- ✅ **Isolamento de dados** por usuário autenticado
 - ✅ **Valores monetários** com precisão decimal usando `BigDecimal`
 - ✅ **Filtro de lançamentos** por tipo (`RECEITA` ou `DESPESA`)
 - ✅ **Validação** de dados com Bean Validation
@@ -255,6 +256,9 @@ src/main/java/com/gustavo/taskmanager/
 - [ ] Adicionar filtros por data e paginação nos lançamentos
 - [ ] Criar metas e orçamentos mensais
 - [x] Adicionar autenticação e autorização inicial com JWT
+- [ ] Criar planos e assinaturas de acesso
+- [ ] Integrar gateway de pagamento e webhooks
+- [ ] Liberar recursos conforme o status da assinatura
 - [ ] Ampliar testes unitários, de integração e dos endpoints HTTP
 - [ ] Restringir CORS e externalizar configurações sensíveis
 - [ ] Containerizar a aplicação com Docker

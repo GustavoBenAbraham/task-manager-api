@@ -9,10 +9,12 @@ import com.gustavo.taskmanager.model.Categoria;
 import com.gustavo.taskmanager.model.Conta;
 import com.gustavo.taskmanager.model.Lancamento;
 import com.gustavo.taskmanager.model.TipoLancamento;
+import com.gustavo.taskmanager.model.Usuario;
 import com.gustavo.taskmanager.repository.ContaRepository;
 import com.gustavo.taskmanager.repository.CategoriaRepository;
 import com.gustavo.taskmanager.repository.LancamentoRepository;
 import com.gustavo.taskmanager.service.LancamentoService;
+import com.gustavo.taskmanager.service.UsuarioAtualService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,7 @@ public class LancamentoServiceImpl implements LancamentoService {
     private final LancamentoRepository repository;
     private final ContaRepository contaRepository;
     private final CategoriaRepository categoriaRepository;
+    private final UsuarioAtualService usuarioAtualService;
 
     @Override
     public LancamentoResponseDTO criar(LancamentoRequestDTO dto) {
@@ -37,6 +40,7 @@ public class LancamentoServiceImpl implements LancamentoService {
             .categoria(categoria != null ? categoria.getNome() : dto.getCategoria())
             .categoriaRelacionada(categoria)
             .conta(buscarConta(dto.getContaId()))
+            .usuario(usuarioAtual())
             .observacao(dto.getObservacao())
             .build();
 
@@ -45,7 +49,10 @@ public class LancamentoServiceImpl implements LancamentoService {
 
     @Override
     public List<LancamentoResponseDTO> listarTodos() {
-        return repository.findAllByOrderByDataDesc()
+        List<Lancamento> lancamentos = usuarioAtual() == null
+            ? repository.findAllByOrderByDataDesc()
+            : repository.findAllByUsuarioOrderByDataDesc(usuarioAtual());
+        return lancamentos
             .stream()
             .map(this::toDTO)
             .toList();
@@ -53,13 +60,15 @@ public class LancamentoServiceImpl implements LancamentoService {
 
     @Override
     public LancamentoResponseDTO buscarPorId(Long id) {
-        return toDTO(repository.findById(id)
-            .orElseThrow(() -> new LancamentoNotFoundException(id)));
+        return toDTO(obterLancamento(id));
     }
 
     @Override
     public List<LancamentoResponseDTO> buscarPorTipo(TipoLancamento tipo) {
-        return repository.findByTipoOrderByDataDesc(tipo)
+        List<Lancamento> lancamentos = usuarioAtual() == null
+            ? repository.findByTipoOrderByDataDesc(tipo)
+            : repository.findByUsuarioAndTipoOrderByDataDesc(usuarioAtual(), tipo);
+        return lancamentos
             .stream()
             .map(this::toDTO)
             .toList();
@@ -67,8 +76,7 @@ public class LancamentoServiceImpl implements LancamentoService {
 
     @Override
     public LancamentoResponseDTO atualizar(Long id, LancamentoRequestDTO dto) {
-        Lancamento lancamento = repository.findById(id)
-            .orElseThrow(() -> new LancamentoNotFoundException(id));
+        Lancamento lancamento = obterLancamento(id);
         Categoria categoria = buscarCategoria(dto.getCategoriaId());
 
         lancamento.setDescricao(dto.getDescricao());
@@ -85,9 +93,7 @@ public class LancamentoServiceImpl implements LancamentoService {
 
     @Override
     public void deletar(Long id) {
-        if (!repository.existsById(id)) {
-            throw new LancamentoNotFoundException(id);
-        }
+        obterLancamento(id);
         repository.deleteById(id);
     }
 
@@ -110,16 +116,40 @@ public class LancamentoServiceImpl implements LancamentoService {
     }
 
     private Conta buscarConta(Long contaId) {
-        return contaRepository.findById(contaId)
+        Conta conta = contaRepository.findById(contaId)
             .orElseThrow(() -> new ContaNotFoundException(contaId));
+        if (usuarioAtual() != null && (conta.getUsuario() == null
+                || !usuarioAtual().getId().equals(conta.getUsuario().getId()))) {
+            throw new ContaNotFoundException(contaId);
+        }
+        return conta;
     }
 
     private Categoria buscarCategoria(Long categoriaId) {
         if (categoriaId == null) {
             return null;
         }
-        return categoriaRepository.findById(categoriaId)
+        Categoria categoria = categoriaRepository.findById(categoriaId)
             .orElseThrow(() -> new CategoriaNotFoundException(categoriaId));
+        if (usuarioAtual() != null && (categoria.getUsuario() == null
+                || !usuarioAtual().getId().equals(categoria.getUsuario().getId()))) {
+            throw new CategoriaNotFoundException(categoriaId);
+        }
+        return categoria;
+    }
+
+    private Lancamento obterLancamento(Long id) {
+        Lancamento lancamento = repository.findById(id)
+            .orElseThrow(() -> new LancamentoNotFoundException(id));
+        if (usuarioAtual() != null && (lancamento.getUsuario() == null
+                || !usuarioAtual().getId().equals(lancamento.getUsuario().getId()))) {
+            throw new LancamentoNotFoundException(id);
+        }
+        return lancamento;
+    }
+
+    private Usuario usuarioAtual() {
+        return usuarioAtualService == null ? null : usuarioAtualService.obter();
     }
 
 }
