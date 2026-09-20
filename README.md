@@ -1,12 +1,11 @@
-[README_TASK_MANAGER_ATUALIZADO.md](https://github.com/user-attachments/files/31477781/README_TASK_MANAGER_ATUALIZADO.md)
 # 📝 Task Manager API
 
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.0-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Flyway](https://img.shields.io/badge/Flyway-CC0200?style=for-the-badge&logo=flyway&logoColor=white)
 
-> API REST completa para gerenciamento de tarefas, construída com **Java 21**, **Spring Boot 3.3.0** e **PostgreSQL**.
+> API REST para gerenciamento de tarefas, construída com **Java 21**, **Spring Boot 4.1.1** e **PostgreSQL**.
 
 ---
 
@@ -16,7 +15,6 @@
 - ✅ **Validação** de dados com Bean Validation
 - ✅ **Tratamento de erros** profissional com respostas JSON
 - ✅ **Filtro por status** (PENDENTE, EM_ANDAMENTO, CONCLUIDA, CANCELADA)
-- ✅ **Busca por título** com filtro parcial
 - ✅ **Datas automáticas** de criação e atualização
 - ✅ **Migrações Flyway** para controle de versão do banco
 - ✅ **CORS** configurado para comunicação com frontend
@@ -27,10 +25,10 @@
 
 ### Backend
 - **Java 21** — Linguagem principal
-- **Spring Boot 3.3.0** — Framework web
+- **Spring Boot 4.1.1** — Framework web
 - **Spring Data JPA** — Persistência de dados
 - **Spring Validation** — Validação de dados
-- **PostgreSQL 16** — Banco de dados relacional
+- **PostgreSQL 17+** — Banco de dados relacional
 - **Flyway** — Migrações de banco de dados
 - **Lombok** — Redução de boilerplate
 - **Maven** — Gerenciamento de dependências
@@ -41,8 +39,8 @@
 
 ### Pré-requisitos
 - Java 21+
-- Maven
-- PostgreSQL 16+ (ou Docker)
+- Maven (opcional, o Maven Wrapper já está incluído)
+- PostgreSQL 17+ (ou Docker)
 
 ### 1. Clone o repositório
 ```bash
@@ -58,22 +56,38 @@ CREATE DATABASE taskmanager;
 
 Ou use Docker:
 ```bash
-docker run --name taskmanager-db -e POSTGRES_DB=taskmanager -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:16
+docker run --name taskmanager-db -e POSTGRES_DB=taskmanager -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=defina_uma_senha -p 5432:5432 -d postgres:17
 ```
 
 ### 3. Configure as credenciais
-Edite `src/main/resources/application.properties` se necessário:
+Edite `src/main/resources/application.properties` com as credenciais do seu PostgreSQL:
 ```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/taskmanager
 spring.datasource.username=postgres
-spring.datasource.password=postgres
+spring.datasource.password=SUA_SENHA_DO_POSTGRES
 ```
 
+Não publique a senha real no GitHub. Para ambientes compartilhados ou de produção, use variáveis de ambiente ou um gerenciador de segredos.
+
 ### 4. Execute o projeto
+No Windows:
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+No Linux/macOS:
 ```bash
 ./mvnw spring-boot:run
 ```
 
 O servidor iniciará em `http://localhost:8080`
+
+### 5. Execute os testes
+```bash
+./mvnw test
+```
+
+No Windows PowerShell, use `./mvnw.cmd test`.
 
 ---
 
@@ -84,7 +98,7 @@ O servidor iniciará em `http://localhost:8080`
 | POST | `/api/v1/tasks` | Criar nova tarefa |
 | GET | `/api/v1/tasks` | Listar todas as tarefas |
 | GET | `/api/v1/tasks/{id}` | Buscar tarefa por ID |
-| GET | `/api/v1/tasks/status/{status}` | Filtrar por status |
+| GET | `/api/v1/tasks/status/{status}` | Filtrar por status (`PENDENTE`, `EM_ANDAMENTO`, `CONCLUIDA`, `CANCELADA`) |
 | PUT | `/api/v1/tasks/{id}` | Atualizar tarefa |
 | DELETE | `/api/v1/tasks/{id}` | Deletar tarefa |
 
@@ -146,7 +160,8 @@ src/main/java/com/gustavo/taskmanager/
 ## 🎯 Próximos passos
 
 - [ ] Adicionar autenticação JWT
-- [ ] Implementar testes unitários e de integração
+- [ ] Ampliar testes unitários e de integração
+- [ ] Expor busca por título na API
 - [ ] Adicionar paginação nos endpoints de listagem
 - [ ] Containerização com Docker
 - [ ] CI/CD com GitHub Actions
