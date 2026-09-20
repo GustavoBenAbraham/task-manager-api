@@ -15,6 +15,7 @@
 - ✅ **Lançamentos financeiros** de receitas e despesas
 - ✅ **Categorias financeiras** reutilizáveis
 - ✅ **Resumo financeiro por período** com receitas, despesas e saldo
+- ✅ **Cadastro e login** com senha protegida por BCrypt e token JWT
 - ✅ **Valores monetários** com precisão decimal usando `BigDecimal`
 - ✅ **Filtro de lançamentos** por tipo (`RECEITA` ou `DESPESA`)
 - ✅ **Validação** de dados com Bean Validation
@@ -69,7 +70,13 @@ Edite `src/main/resources/application.properties` com as credenciais do seu Post
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/taskmanager
 spring.datasource.username=postgres
-spring.datasource.password=SUA_SENHA_DO_POSTGRES
+spring.datasource.password=${DB_PASSWORD}
+```
+
+No PowerShell, defina a senha antes de executar a aplicação:
+```powershell
+$env:DB_PASSWORD = "SUA_SENHA_DO_POSTGRES"
+$env:JWT_SECRET = "SUA_CHAVE_BASE64_FORTE"
 ```
 
 Não publique a senha real no GitHub. Para ambientes compartilhados ou de produção, use variáveis de ambiente ou um gerenciador de segredos.
@@ -156,6 +163,21 @@ Resposta:
 }
 ```
 
+### Autenticação
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| POST | `/api/v1/auth/register` | Criar usuário |
+| POST | `/api/v1/auth/login` | Autenticar e obter token JWT |
+
+Os demais endpoints exigem o token retornado no login:
+
+```http
+Authorization: Bearer SEU_TOKEN_JWT
+```
+
+Defina `JWT_SECRET` com uma chave Base64 forte antes de iniciar a aplicação.
+
 Exemplo de lançamento:
 
 ```json
@@ -232,7 +254,7 @@ src/main/java/com/gustavo/taskmanager/
 - [ ] Implementar dashboard com saldo, receitas e despesas por período
 - [ ] Adicionar filtros por data e paginação nos lançamentos
 - [ ] Criar metas e orçamentos mensais
-- [ ] Adicionar autenticação e autorização com JWT
+- [x] Adicionar autenticação e autorização inicial com JWT
 - [ ] Ampliar testes unitários, de integração e dos endpoints HTTP
 - [ ] Restringir CORS e externalizar configurações sensíveis
 - [ ] Containerizar a aplicação com Docker
