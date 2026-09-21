@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || 'https://task-manager-api-wmx2.onrender.com'
+// Remove barra final se houver, para evitar URLs com barra dupla (ex: base/ + /path)
+const API_URL = (import.meta.env.VITE_API_URL || 'https://task-manager-api-wmx2.onrender.com').replace(/\/$/, '')
 
 function getToken() {
   return localStorage.getItem('token')
