@@ -284,9 +284,28 @@ src/main/java/com/gustavo/taskmanager/
 - [ ] Liberar recursos conforme o status da assinatura
 - [ ] Ampliar testes unitários, de integração e dos endpoints HTTP
 - [ ] Restringir CORS e externalizar configurações sensíveis
-- [ ] Containerizar a aplicação com Docker
+- [x] Containerizar a aplicação com Docker
 - [ ] Configurar CI/CD com GitHub Actions
-- [ ] Fazer deploy na nuvem
+- [ ] Fazer deploy na nuvem (Render - 100% Gratuito)
+
+---
+
+## 🚀 Deploy Gratuito
+
+A aplicação está pronta para deploy em serviços gratuitos:
+
+### Render (Recomendado - 100% Gratuito)
+- ✅ PostgreSQL grátis incluído
+- ✅ Deploy automático do GitHub
+- ✅ SSL/HTTPS grátis
+- ✅ App hiberna após 15min sem uso
+
+**Instruções detalhadas:** Veja `DEPLOY_RENDER.md`
+
+### Outras Opções
+- **Heroku Eco**: PostgreSQL grátis, deploy automático
+- **Oracle Cloud Always Free**: Mais recursos, setup mais complexo
+- **Azure App Service**: $30-45/mês (plano pago)
 
 ---
 
