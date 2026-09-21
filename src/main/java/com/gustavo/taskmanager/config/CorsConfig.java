@@ -15,10 +15,12 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Frontend local + Vercel
+        // Frontend local + Vercel + Render + qualquer subdomínio de onrender.com
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173",
-                "https://*.vercel.app"
+                "http://localhost:4173",
+                "https://*.vercel.app",
+                "https://*.onrender.com"
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

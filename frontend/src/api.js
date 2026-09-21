@@ -25,7 +25,11 @@ async function request(path, options = {}) {
     throw new Error(text || `Erro ${res.status}`)
   }
 
+  // 204 No Content ou 201/200 com body vazio → retorna null sem tentar parsear
   if (res.status === 204) return null
+  const contentLength = res.headers.get('content-length')
+  const contentType = res.headers.get('content-type') || ''
+  if (contentLength === '0' || !contentType.includes('application/json')) return null
   return res.json()
 }
 

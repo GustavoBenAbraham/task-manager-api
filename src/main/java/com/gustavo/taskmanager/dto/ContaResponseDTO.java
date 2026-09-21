@@ -16,6 +16,8 @@ public class ContaResponseDTO {
     private String nome;
     private TipoConta tipo;
     private BigDecimal saldoInicial;
+    /** Saldo atual = saldoInicial + receitas vinculadas − despesas vinculadas */
+    private BigDecimal saldoAtual;
     private boolean ativo;
     private LocalDateTime dataCriacao;
     private LocalDateTime dataAtualizacao;

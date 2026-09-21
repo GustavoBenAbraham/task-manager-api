@@ -5,12 +5,14 @@ import com.gustavo.taskmanager.dto.ContaResponseDTO;
 import com.gustavo.taskmanager.exception.ContaNotFoundException;
 import com.gustavo.taskmanager.model.Conta;
 import com.gustavo.taskmanager.repository.ContaRepository;
+import com.gustavo.taskmanager.repository.LancamentoRepository;
 import com.gustavo.taskmanager.service.ContaService;
 import com.gustavo.taskmanager.service.UsuarioAtualService;
 import com.gustavo.taskmanager.model.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -18,6 +20,7 @@ import java.util.List;
 public class ContaServiceImpl implements ContaService {
 
     private final ContaRepository repository;
+    private final LancamentoRepository lancamentoRepository;
     private final UsuarioAtualService usuarioAtualService;
 
     @Override
@@ -67,11 +70,17 @@ public class ContaServiceImpl implements ContaService {
     }
 
     private ContaResponseDTO toDTO(Conta conta) {
+        BigDecimal movimentacao = lancamentoRepository
+                .calcularMovimentacaoLiquida(conta.getId());
+        BigDecimal saldoAtual = conta.getSaldoInicial()
+                .add(movimentacao != null ? movimentacao : BigDecimal.ZERO);
+
         return ContaResponseDTO.builder()
             .id(conta.getId())
             .nome(conta.getNome())
             .tipo(conta.getTipo())
             .saldoInicial(conta.getSaldoInicial())
+            .saldoAtual(saldoAtual)
             .ativo(conta.isAtivo())
             .dataCriacao(conta.getDataCriacao())
             .dataAtualizacao(conta.getDataAtualizacao())
