@@ -33,6 +33,7 @@ public class SecurityConfig {
                 org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/health").permitAll()
                 .requestMatchers("/").permitAll()
                 .requestMatchers("/error").permitAll()
                 .anyRequest().authenticated())
