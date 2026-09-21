@@ -9,6 +9,7 @@ import com.gustavo.taskmanager.repository.UsuarioRepository;
 import com.gustavo.taskmanager.service.AuthService;
 import com.gustavo.taskmanager.service.JwtService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
 
     private final UsuarioRepository repository;
@@ -25,7 +27,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void registrar(AuthRegisterRequestDTO dto) {
+        log.info("Tentando registrar usuário: {}", dto.getEmail());
         if (repository.existsByEmailIgnoreCase(dto.getEmail())) {
+            log.warn("E-mail já em uso: {}", dto.getEmail());
             throw new EmailAlreadyUsedException();
         }
 
@@ -35,15 +39,21 @@ public class AuthServiceImpl implements AuthService {
             .senhaHash(passwordEncoder.encode(dto.getSenha()))
             .build();
         repository.save(usuario);
+        log.info("Usuário registrado com sucesso: {}", usuario.getEmail());
     }
 
     @Override
     public AuthResponseDTO autenticar(AuthLoginRequestDTO dto) {
+        log.info("Tentando autenticar usuário: {}", dto.getEmail());
         Usuario usuario = repository.findByEmailIgnoreCase(dto.getEmail().trim().toLowerCase())
             .filter(Usuario::isAtivo)
-            .orElseThrow(() -> new BadCredentialsException("E-mail ou senha inválidos"));
+            .orElseThrow(() -> {
+                log.warn("Falha na autenticação: usuário não encontrado ou inativo: {}", dto.getEmail());
+                return new BadCredentialsException("E-mail ou senha inválidos");
+            });
 
         if (!passwordEncoder.matches(dto.getSenha(), usuario.getSenhaHash())) {
+            log.warn("Falha na autenticação: senha inválida para: {}", dto.getEmail());
             throw new BadCredentialsException("E-mail ou senha inválidos");
         }
 
@@ -51,6 +61,8 @@ public class AuthServiceImpl implements AuthService {
             .password(usuario.getSenhaHash())
             .roles("USER")
             .build();
-        return new AuthResponseDTO(jwtService.gerarToken(userDetails), "Bearer");
+        String token = jwtService.gerarToken(userDetails);
+        log.info("Autenticação bem-sucedida: {}", usuario.getEmail());
+        return new AuthResponseDTO(token, "Bearer");
     }
 }

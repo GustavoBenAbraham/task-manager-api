@@ -16,12 +16,14 @@ import com.gustavo.taskmanager.repository.LancamentoRepository;
 import com.gustavo.taskmanager.service.LancamentoService;
 import com.gustavo.taskmanager.service.UsuarioAtualService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class LancamentoServiceImpl implements LancamentoService {
 
     private final LancamentoRepository repository;
@@ -31,6 +33,7 @@ public class LancamentoServiceImpl implements LancamentoService {
 
     @Override
     public LancamentoResponseDTO criar(LancamentoRequestDTO dto) {
+        log.info("Criando lançamento: {}", dto.getDescricao());
         Categoria categoria = buscarCategoria(dto.getCategoriaId());
         Lancamento lancamento = Lancamento.builder()
             .descricao(dto.getDescricao())
@@ -44,14 +47,18 @@ public class LancamentoServiceImpl implements LancamentoService {
             .observacao(dto.getObservacao())
             .build();
 
-        return toDTO(repository.save(lancamento));
+        LancamentoResponseDTO response = toDTO(repository.save(lancamento));
+        log.info("Lançamento criado com sucesso: id={}", response.getId());
+        return response;
     }
 
     @Override
     public List<LancamentoResponseDTO> listarTodos() {
-        List<Lancamento> lancamentos = usuarioAtual() == null
+        log.debug("Listando todos os lançamentos");
+        Usuario usuario = usuarioAtual();
+        List<Lancamento> lancamentos = usuario == null
             ? repository.findAllByOrderByDataDesc()
-            : repository.findAllByUsuarioOrderByDataDesc(usuarioAtual());
+            : repository.findAllByUsuarioOrderByDataDesc(usuario);
         return lancamentos
             .stream()
             .map(this::toDTO)
@@ -60,14 +67,17 @@ public class LancamentoServiceImpl implements LancamentoService {
 
     @Override
     public LancamentoResponseDTO buscarPorId(Long id) {
+        log.debug("Buscando lançamento por id: {}", id);
         return toDTO(obterLancamento(id));
     }
 
     @Override
     public List<LancamentoResponseDTO> buscarPorTipo(TipoLancamento tipo) {
-        List<Lancamento> lancamentos = usuarioAtual() == null
+        log.debug("Buscando lançamentos por tipo: {}", tipo);
+        Usuario usuario = usuarioAtual();
+        List<Lancamento> lancamentos = usuario == null
             ? repository.findByTipoOrderByDataDesc(tipo)
-            : repository.findByUsuarioAndTipoOrderByDataDesc(usuarioAtual(), tipo);
+            : repository.findByUsuarioAndTipoOrderByDataDesc(usuario, tipo);
         return lancamentos
             .stream()
             .map(this::toDTO)
@@ -76,6 +86,7 @@ public class LancamentoServiceImpl implements LancamentoService {
 
     @Override
     public LancamentoResponseDTO atualizar(Long id, LancamentoRequestDTO dto) {
+        log.info("Atualizando lançamento: id={}", id);
         Lancamento lancamento = obterLancamento(id);
         Categoria categoria = buscarCategoria(dto.getCategoriaId());
 
@@ -88,13 +99,17 @@ public class LancamentoServiceImpl implements LancamentoService {
         lancamento.setConta(buscarConta(dto.getContaId()));
         lancamento.setObservacao(dto.getObservacao());
 
-        return toDTO(repository.save(lancamento));
+        LancamentoResponseDTO response = toDTO(repository.save(lancamento));
+        log.info("Lançamento atualizado com sucesso: id={}", id);
+        return response;
     }
 
     @Override
     public void deletar(Long id) {
+        log.info("Deletando lançamento: id={}", id);
         obterLancamento(id);
         repository.deleteById(id);
+        log.info("Lançamento deletado com sucesso: id={}", id);
     }
 
     private LancamentoResponseDTO toDTO(Lancamento lancamento) {
@@ -118,8 +133,9 @@ public class LancamentoServiceImpl implements LancamentoService {
     private Conta buscarConta(Long contaId) {
         Conta conta = contaRepository.findById(contaId)
             .orElseThrow(() -> new ContaNotFoundException(contaId));
-        if (usuarioAtual() != null && (conta.getUsuario() == null
-                || !usuarioAtual().getId().equals(conta.getUsuario().getId()))) {
+        Usuario usuario = usuarioAtual();
+        if (usuario != null && (conta.getUsuario() == null
+                || !usuario.getId().equals(conta.getUsuario().getId()))) {
             throw new ContaNotFoundException(contaId);
         }
         return conta;
@@ -131,8 +147,9 @@ public class LancamentoServiceImpl implements LancamentoService {
         }
         Categoria categoria = categoriaRepository.findById(categoriaId)
             .orElseThrow(() -> new CategoriaNotFoundException(categoriaId));
-        if (usuarioAtual() != null && (categoria.getUsuario() == null
-                || !usuarioAtual().getId().equals(categoria.getUsuario().getId()))) {
+        Usuario usuario = usuarioAtual();
+        if (usuario != null && (categoria.getUsuario() == null
+                || !usuario.getId().equals(categoria.getUsuario().getId()))) {
             throw new CategoriaNotFoundException(categoriaId);
         }
         return categoria;
@@ -141,15 +158,16 @@ public class LancamentoServiceImpl implements LancamentoService {
     private Lancamento obterLancamento(Long id) {
         Lancamento lancamento = repository.findById(id)
             .orElseThrow(() -> new LancamentoNotFoundException(id));
-        if (usuarioAtual() != null && (lancamento.getUsuario() == null
-                || !usuarioAtual().getId().equals(lancamento.getUsuario().getId()))) {
+        Usuario usuario = usuarioAtual();
+        if (usuario != null && (lancamento.getUsuario() == null
+                || !usuario.getId().equals(lancamento.getUsuario().getId()))) {
             throw new LancamentoNotFoundException(id);
         }
         return lancamento;
     }
 
     private Usuario usuarioAtual() {
-        return usuarioAtualService == null ? null : usuarioAtualService.obter();
+        return usuarioAtualService.obter();
     }
 
 }

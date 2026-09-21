@@ -5,7 +5,9 @@ import com.gustavo.taskmanager.dto.TaskResponseDTO;
 import com.gustavo.taskmanager.exception.TaskNotFoundException;
 import com.gustavo.taskmanager.model.Task;
 import com.gustavo.taskmanager.model.TaskStatus;
+import com.gustavo.taskmanager.model.Usuario;
 import com.gustavo.taskmanager.repository.TaskRepository;
+import com.gustavo.taskmanager.service.UsuarioAtualService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,6 +28,9 @@ class TaskServiceImplTest {
     @Mock
     private TaskRepository repository;
 
+    @Mock
+    private UsuarioAtualService usuarioAtualService;
+
     @InjectMocks
     private TaskServiceImpl service;
 
@@ -36,6 +41,7 @@ class TaskServiceImplTest {
             .descricao("Criar testes unitarios")
             .build();
 
+        when(usuarioAtualService.obter()).thenReturn(Usuario.builder().id(1L).build());
         when(repository.save(any(Task.class))).thenAnswer(invocation -> {
             Task task = invocation.getArgument(0);
             task.setId(1L);
@@ -58,17 +64,20 @@ class TaskServiceImplTest {
 
     @Test
     void devePreservarStatusAtualQuandoStatusNaoForInformadoNaAtualizacao() {
+        Usuario usuario = Usuario.builder().id(1L).build();
         Task task = Task.builder()
             .id(1L)
             .titulo("Titulo antigo")
             .descricao("Descricao antiga")
             .status(TaskStatus.EM_ANDAMENTO)
+            .usuario(usuario)
             .build();
         TaskRequestDTO request = TaskRequestDTO.builder()
             .titulo("Titulo novo")
             .descricao("Descricao nova")
             .build();
 
+        when(usuarioAtualService.obter()).thenReturn(usuario);
         when(repository.findById(1L)).thenReturn(Optional.of(task));
         when(repository.save(task)).thenReturn(task);
 

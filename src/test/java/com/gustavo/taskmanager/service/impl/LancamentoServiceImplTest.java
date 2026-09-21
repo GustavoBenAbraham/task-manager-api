@@ -4,11 +4,13 @@ import com.gustavo.taskmanager.dto.LancamentoRequestDTO;
 import com.gustavo.taskmanager.dto.LancamentoResponseDTO;
 import com.gustavo.taskmanager.exception.LancamentoNotFoundException;
 import com.gustavo.taskmanager.model.Conta;
+import com.gustavo.taskmanager.model.Usuario;
 import com.gustavo.taskmanager.repository.CategoriaRepository;
 import com.gustavo.taskmanager.model.Lancamento;
 import com.gustavo.taskmanager.model.TipoLancamento;
 import com.gustavo.taskmanager.repository.ContaRepository;
 import com.gustavo.taskmanager.repository.LancamentoRepository;
+import com.gustavo.taskmanager.service.UsuarioAtualService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -36,6 +38,9 @@ class LancamentoServiceImplTest {
     @Mock
     private CategoriaRepository categoriaRepository;
 
+    @Mock
+    private UsuarioAtualService usuarioAtualService;
+
     @InjectMocks
     private LancamentoServiceImpl service;
 
@@ -50,9 +55,11 @@ class LancamentoServiceImplTest {
             .contaId(1L)
             .build();
 
+        when(usuarioAtualService.obter()).thenReturn(Usuario.builder().id(1L).build());
         when(contaRepository.findById(1L)).thenReturn(Optional.of(Conta.builder()
             .id(1L)
             .nome("Conta principal")
+            .usuario(Usuario.builder().id(1L).build())
             .build()));
 
         when(repository.save(any(Lancamento.class))).thenAnswer(invocation -> {
@@ -77,6 +84,7 @@ class LancamentoServiceImplTest {
 
     @Test
     void deveAtualizarTodosOsDadosDoLancamento() {
+        Usuario usuario = Usuario.builder().id(1L).build();
         Lancamento lancamento = Lancamento.builder()
             .id(1L)
             .descricao("Conta antiga")
@@ -84,6 +92,7 @@ class LancamentoServiceImplTest {
             .tipo(TipoLancamento.DESPESA)
             .data(LocalDate.of(2026, 9, 1))
             .categoria("Moradia")
+            .usuario(usuario)
             .build();
         LancamentoRequestDTO request = LancamentoRequestDTO.builder()
             .descricao("Conta atualizada")
@@ -95,10 +104,12 @@ class LancamentoServiceImplTest {
             .observacao("Pagamento atualizado")
             .build();
 
+        when(usuarioAtualService.obter()).thenReturn(usuario);
         when(repository.findById(1L)).thenReturn(Optional.of(lancamento));
         when(contaRepository.findById(1L)).thenReturn(Optional.of(Conta.builder()
             .id(1L)
             .nome("Conta principal")
+            .usuario(usuario)
             .build()));
         when(repository.save(lancamento)).thenReturn(lancamento);
 

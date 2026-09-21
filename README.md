@@ -120,12 +120,21 @@ No Windows PowerShell, use `./mvnw.cmd test`.
 
 ## 🔗 API Endpoints
 
+### Documentação Interativa
+A API possui documentação interativa com Swagger UI disponível em:
+- **Swagger UI**: `http://localhost:8080/swagger-ui.html`
+- **OpenAPI JSON**: `http://localhost:8080/v3/api-docs`
+
+### Tarefas
+
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
 | POST | `/api/v1/tasks` | Criar nova tarefa |
 | GET | `/api/v1/tasks` | Listar todas as tarefas |
+| GET | `/api/v1/tasks/paginado` | Listar tarefas com paginação (page, size, sort) |
 | GET | `/api/v1/tasks/{id}` | Buscar tarefa por ID |
 | GET | `/api/v1/tasks/status/{status}` | Filtrar por status (`PENDENTE`, `EM_ANDAMENTO`, `CONCLUIDA`, `CANCELADA`) |
+| GET | `/api/v1/tasks/status/{status}/paginado` | Filtrar por status com paginação |
 | PUT | `/api/v1/tasks/{id}` | Atualizar tarefa |
 | DELETE | `/api/v1/tasks/{id}` | Deletar tarefa |
 
