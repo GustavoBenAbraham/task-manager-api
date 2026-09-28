@@ -65,5 +65,16 @@ export const api = {
 
   lancamentos: () => request('/api/v1/lancamentos'),
 
+  criarLancamento: (data) =>
+    request('/api/v1/lancamentos', { method: 'POST', body: JSON.stringify(data) }),
+
+  excluirLancamento: (id) =>
+    request(`/api/v1/lancamentos/${id}`, { method: 'DELETE' }),
+
   contas: () => request('/api/v1/contas'),
+
+  criarConta: (data) =>
+    request('/api/v1/contas', { method: 'POST', body: JSON.stringify(data) }),
+
+  categorias: () => request('/api/v1/categorias'),
 }

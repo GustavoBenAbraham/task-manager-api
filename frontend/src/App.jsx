@@ -8,12 +8,12 @@ import {
   CreditCard,
   LayoutDashboard,
   LogOut,
-  MoreHorizontal,
   Plus,
   Search,
   Settings2,
   Sparkles,
   Tags,
+  Trash2,
   WalletCards,
 } from 'lucide-react'
 import { api } from './api'
@@ -152,6 +152,10 @@ function App() {
   const [resumo, setResumo] = useState(null)
   const [lancamentos, setLancamentos] = useState([])
   const [contas, setContas] = useState([])
+  const [categorias, setCategorias] = useState([])
+  const [dialog, setDialog] = useState(null)
+  const [query, setQuery] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -166,21 +170,54 @@ function App() {
       api.resumo(inicio, fim).catch(() => null),
       api.lancamentos().catch(() => []),
       api.contas().catch(() => []),
+      api.categorias().catch(() => []),
     ])
-      .then(([r, l, c]) => {
+      .then(([r, l, c, cats]) => {
         setResumo(r)
         setLancamentos(Array.isArray(l) ? l : [])
         setContas(Array.isArray(c) ? c : [])
+        setCategorias(Array.isArray(cats) ? cats.filter((item) => item.ativa) : [])
       })
       .catch((err) => setError(err.message || 'Erro ao carregar dados'))
       .finally(() => setLoading(false))
-  }, [loggedIn])
+  }, [loggedIn, reloadKey])
 
   if (!loggedIn) {
     return <LoginScreen onLoggedIn={() => setLoggedIn(true)} />
   }
 
   const saldoContas = contas.reduce((acc, c) => acc + Number(c.saldo ?? c.saldoAtual ?? 0), 0)
+  const lancamentosFiltrados = lancamentos.filter((item) =>
+    `${item.descricao || ''} ${item.categoriaNome || item.categoria || ''} ${item.contaNome || ''}`
+      .toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR')),
+  )
+
+  async function salvarCadastro(data) {
+    setLoading(true)
+    setError('')
+    try {
+      if (dialog === 'transaction') await api.criarLancamento(data)
+      else await api.criarConta(data)
+      setDialog(null)
+      setReloadKey((key) => key + 1)
+    } catch (err) {
+      setError(err.message || 'Não foi possível salvar os dados.')
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function excluirLancamento(id) {
+    if (!window.confirm('Excluir este lançamento? Esta ação não pode ser desfeita.')) return
+    setError('')
+    try {
+      await api.excluirLancamento(id)
+      setReloadKey((key) => key + 1)
+    } catch (err) {
+      setError(err.message || 'Não foi possível excluir o lançamento.')
+    }
+  }
 
   return (
     <div className="app-shell">
@@ -250,8 +287,10 @@ function App() {
                 {loading ? 'Carregando dados da API...' : error ? error : 'Dados vindos da API no Render.'}
               </p>
             </div>
-            <button className="primary-button"><Plus size={18} /> Novo lançamento</button>
+            <button className="primary-button" onClick={() => { setError(''); setDialog('transaction') }} disabled={contas.length === 0} title={contas.length === 0 ? 'Cadastre uma conta primeiro' : undefined}><Plus size={18} /> Novo lançamento</button>
           </section>
+
+          {error && <p role="alert" className="app-error">{error}</p>}
 
           <section className="metric-grid">
             <MetricCard
@@ -298,6 +337,7 @@ function App() {
                   <p className="panel-kicker">Patrimônio</p>
                   <h2>Minhas contas</h2>
                 </div>
+                <button className="secondary-button" onClick={() => { setError(''); setDialog('account') }}><Plus size={15} /> Nova conta</button>
               </div>
               <div className="account-total">
                 <span>Saldo total</span>
@@ -323,22 +363,23 @@ function App() {
                 <h2>Últimos lançamentos</h2>
               </div>
               <div className="table-actions">
-                <div className="search-box"><Search size={16} /><input placeholder="Buscar lançamento" /></div>
+                <div className="search-box"><Search size={16} /><input placeholder="Buscar lançamento" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
               </div>
             </div>
 
             <div className="transaction-list">
-              {lancamentos.length === 0 && (
+              {lancamentosFiltrados.length === 0 && (
                 <p style={{ opacity: 0.7, padding: 12 }}>Nenhum lançamento ainda.</p>
               )}
-              {lancamentos.slice(0, 10).map((item) => {
+              {lancamentosFiltrados.slice(0, activeNav === 'Lançamentos' ? lancamentosFiltrados.length : 10).map((item) => {
                 const isIncome = (item.tipo || '').toUpperCase() === 'RECEITA'
                 return (
                   <TransactionRow
                     key={item.id}
+                    onDelete={() => excluirLancamento(item.id)}
                     transaction={{
                       title: item.descricao || `Lançamento #${item.id}`,
-                      category: item.categoria || item.tipo || '—',
+                      category: [item.categoriaNome || item.categoria || item.tipo || '—', item.contaNome].filter(Boolean).join(' · '),
                       date: item.data || '',
                       value: `${isIncome ? '+' : '-'} ${formatMoney(item.valor)}`,
                       type: isIncome ? 'income' : 'expense',
@@ -351,6 +392,7 @@ function App() {
           </section>
         </div>
       </main>
+      {dialog && <CadastroDialog type={dialog} contas={contas} categorias={categorias} onClose={() => setDialog(null)} onSave={salvarCadastro} loading={loading} />}
     </div>
   )
 }
@@ -389,7 +431,7 @@ function AccountRow({ icon, color, name, balance, negative }) {
   )
 }
 
-function TransactionRow({ transaction }) {
+function TransactionRow({ transaction, onDelete }) {
   return (
     <div className="transaction-row">
       <div className={`transaction-icon ${transaction.color}`}>
@@ -401,7 +443,71 @@ function TransactionRow({ transaction }) {
       </div>
       <time>{transaction.date}</time>
       <b className={transaction.type === 'income' ? 'income-text' : 'expense-text'}>{transaction.value}</b>
-      <button className="more-button" title="Mais opções"><MoreHorizontal size={18} /></button>
+      <button className="more-button" title="Excluir lançamento" aria-label={`Excluir ${transaction.title}`} onClick={onDelete}><Trash2 size={16} /></button>
+    </div>
+  )
+}
+
+function CadastroDialog({ type, contas, categorias, onClose, onSave, loading }) {
+  const isTransaction = type === 'transaction'
+  const [form, setForm] = useState({
+    descricao: '', valor: '', tipo: 'DESPESA', data: new Date().toLocaleDateString('sv-SE'),
+    categoria: '', contaId: contas[0]?.id || '', observacao: '', nome: '',
+    tipoConta: 'CONTA_CORRENTE', saldoInicial: '0',
+  })
+  const [formError, setFormError] = useState('')
+
+  function update(event) {
+    setForm({ ...form, [event.target.name]: event.target.value })
+  }
+
+  async function submit(event) {
+    event.preventDefault()
+    setFormError('')
+    try {
+      if (isTransaction) {
+        await onSave({
+          descricao: form.descricao.trim(), valor: Number(form.valor), tipo: form.tipo,
+          data: form.data, categoria: form.categoria.trim(), contaId: Number(form.contaId),
+          observacao: form.observacao.trim() || null,
+        })
+      } else {
+        await onSave({ nome: form.nome.trim(), tipo: form.tipoConta, saldoInicial: Number(form.saldoInicial) })
+      }
+    } catch (error) {
+      setFormError(error.message || 'Não foi possível salvar.')
+    }
+  }
+
+  return (
+    <div className="dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <section className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+        <div className="dialog-heading">
+          <div><p className="panel-kicker">DinDin de giro</p><h2 id="dialog-title">{isTransaction ? 'Novo lançamento' : 'Nova conta'}</h2></div>
+          <button type="button" className="dialog-close" onClick={onClose} aria-label="Fechar">×</button>
+        </div>
+        <form className="dialog-form" onSubmit={submit}>
+          {isTransaction ? <>
+            <label>Descrição<input name="descricao" required maxLength="120" value={form.descricao} onChange={update} autoFocus /></label>
+            <div className="form-columns">
+              <label>Valor (R$)<input name="valor" type="number" required min="0.01" step="0.01" value={form.valor} onChange={update} /></label>
+              <label>Tipo<select name="tipo" value={form.tipo} onChange={update}><option value="DESPESA">Despesa</option><option value="RECEITA">Receita</option></select></label>
+            </div>
+            <div className="form-columns">
+              <label>Data<input name="data" type="date" required value={form.data} onChange={update} /></label>
+              <label>Conta<select name="contaId" required value={form.contaId} onChange={update}><option value="">Selecione</option>{contas.filter((conta) => conta.ativo).map((conta) => <option key={conta.id} value={conta.id}>{conta.nome}</option>)}</select></label>
+            </div>
+            <label>Categoria<input name="categoria" list="categorias-disponiveis" required maxLength="60" value={form.categoria} onChange={update} placeholder="Ex.: Alimentação" /><datalist id="categorias-disponiveis">{categorias.map((categoria) => <option key={categoria.id} value={categoria.nome} />)}</datalist></label>
+            <label>Observação (opcional)<textarea name="observacao" maxLength="500" rows="3" value={form.observacao} onChange={update} /></label>
+          </> : <>
+            <label>Nome da conta<input name="nome" required maxLength="100" value={form.nome} onChange={update} autoFocus /></label>
+            <label>Tipo<select name="tipoConta" value={form.tipoConta} onChange={update}><option value="CONTA_CORRENTE">Conta corrente</option><option value="POUPANCA">Poupança</option><option value="CARTEIRA">Carteira</option><option value="CARTAO_CREDITO">Cartão de crédito</option><option value="OUTRA">Outra</option></select></label>
+            <label>Saldo inicial (R$)<input name="saldoInicial" type="number" min="0" step="0.01" required value={form.saldoInicial} onChange={update} /></label>
+          </>}
+          {formError && <p role="alert" className="app-error">{formError}</p>}
+          <div className="dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>Cancelar</button><button className="primary-button" type="submit" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</button></div>
+        </form>
+      </section>
     </div>
   )
 }
