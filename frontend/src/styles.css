@@ -131,3 +131,22 @@ h1 { margin: 10px 0 5px; font-size: clamp(27px, 3vw, 39px); letter-spacing: -1.8
 .empty-state { padding: 14px 0; color: var(--muted); font-size: 13px; }
 .transaction-row .row-actions { margin-left: 0; }
 @media (max-width: 700px) { .transaction-row .row-actions { gap: 4px; } .transaction-row .row-actions .more-button { padding: 3px; } }
+.workspace-switcher { cursor: pointer; }
+.workspace-copy select { display: block; width: 100%; margin-top: 3px; overflow: hidden; border: 0; outline: 0; color: #34403b; background: transparent; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 700; }
+.workspace-copy select option { color: #34403b; background: white; }
+.welcome-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 9px; }
+.form-hint { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+@media (max-width: 700px) { .welcome-actions { width: 100%; justify-content: flex-start; } }
+.management-description { max-width: 760px; color: #778c84; font-size: 13px; line-height: 1.6; }
+.invite-form { display: flex; align-items: flex-end; gap: 11px; max-width: 680px; margin: 22px 0; }
+.invite-form label, .invite-link-box label { display: grid; flex: 1; gap: 6px; color: #53655c; font-size: 12px; font-weight: 700; }
+.invite-form input, .invite-link-box input { width: 100%; min-width: 0; padding: 11px 12px; border: 1px solid #dcece6; border-radius: 8px; outline: none; color: #34403b; background: white; font-size: 13px; }
+.invite-form input:focus, .invite-link-box input:focus { border-color: #49b99b; }
+.invite-form .primary-button { justify-content: center; min-height: 40px; }
+.invite-notice { padding: 11px 13px; border-radius: 8px; color: #087f68; background: #e8f7f1; font-size: 12px; }
+.invite-link-box { display: flex; align-items: flex-end; gap: 9px; max-width: 800px; padding: 13px; border: 1px solid #cbe5dc; border-radius: 9px; background: #f4fbf8; }
+.invite-link-box .secondary-button { min-height: 40px; white-space: nowrap; }
+.access-list-title { margin: 27px 0 0; color: #34403b; font-size: 14px; }
+.access-avatar { flex: 0 0 31px; width: 31px; height: 31px; border-radius: 50%; background: #0d9277; }
+.revoke-button { padding: 7px 9px; color: #bb6758; }
+@media (max-width: 700px) { .invite-form, .invite-link-box { align-items: stretch; flex-direction: column; }.invite-form .primary-button, .invite-link-box .secondary-button { width: 100%; } }

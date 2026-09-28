@@ -6,7 +6,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "categorias")
+@Table(name = "categorias", uniqueConstraints =
+    @UniqueConstraint(name = "uk_categorias_espaco_nome", columnNames = {"espaco_id", "nome"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,7 +23,15 @@ public class Categoria {
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
-    @Column(nullable = false, unique = true, length = 60)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "espaco_id")
+    private EspacoFinanceiro espaco;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "atualizado_por_usuario_id")
+    private Usuario atualizadoPor;
+
+    @Column(nullable = false, length = 60)
     private String nome;
 
     @Column(nullable = false)

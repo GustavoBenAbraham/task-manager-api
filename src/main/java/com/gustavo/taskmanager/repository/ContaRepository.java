@@ -1,6 +1,7 @@
 package com.gustavo.taskmanager.repository;
 
 import com.gustavo.taskmanager.model.Conta;
+import com.gustavo.taskmanager.model.EspacoFinanceiro;
 import com.gustavo.taskmanager.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -9,6 +10,6 @@ import java.util.List;
 
 @Repository
 public interface ContaRepository extends JpaRepository<Conta, Long> {
-    boolean existsByNomeIgnoreCase(String nome);
-    List<Conta> findAllByUsuarioOrderByNomeAsc(Usuario usuario);
+    boolean existsByEspacoAndNomeIgnoreCase(EspacoFinanceiro espaco, String nome);
+    List<Conta> findAllByEspacoOrderByNomeAsc(EspacoFinanceiro espaco);
 }

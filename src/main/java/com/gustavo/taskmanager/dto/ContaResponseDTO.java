@@ -19,6 +19,8 @@ public class ContaResponseDTO {
     /** Saldo atual = saldoInicial + receitas vinculadas − despesas vinculadas */
     private BigDecimal saldoAtual;
     private boolean ativo;
+    private Long criadoPorUsuarioId;
+    private Long atualizadoPorUsuarioId;
     private LocalDateTime dataCriacao;
     private LocalDateTime dataAtualizacao;
 }

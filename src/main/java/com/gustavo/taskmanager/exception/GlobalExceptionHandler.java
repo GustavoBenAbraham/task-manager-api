@@ -20,6 +20,21 @@ public class GlobalExceptionHandler {
         return resposta(HttpStatus.CONFLICT, e.getMessage());
     }
 
+    @ExceptionHandler(EspacoJaExisteException.class)
+    public ResponseEntity<Map<String, Object>> handleEspacoJaExiste(EspacoJaExisteException e) {
+        return resposta(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(EspacoAcessoNegadoException.class)
+    public ResponseEntity<Map<String, Object>> handleAcessoEspacoNegado(EspacoAcessoNegadoException e) {
+        return resposta(HttpStatus.FORBIDDEN, e.getMessage());
+    }
+
+    @ExceptionHandler(ConviteEspacoException.class)
+    public ResponseEntity<Map<String, Object>> handleConviteInvalido(ConviteEspacoException e) {
+        return resposta(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
     @ExceptionHandler({TaskNotFoundException.class, ContaNotFoundException.class,
             CategoriaNotFoundException.class, LancamentoNotFoundException.class})
     public ResponseEntity<Map<String, Object>> handleNaoEncontrado(RuntimeException e) {

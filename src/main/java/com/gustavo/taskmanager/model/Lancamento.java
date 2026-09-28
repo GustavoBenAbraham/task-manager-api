@@ -24,6 +24,14 @@ public class Lancamento {
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "espaco_id")
+    private EspacoFinanceiro espaco;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "atualizado_por_usuario_id")
+    private Usuario atualizadoPor;
+
     @Column(nullable = false, length = 120)
     private String descricao;
 

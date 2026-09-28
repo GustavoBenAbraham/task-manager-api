@@ -5,6 +5,10 @@ function getToken() {
   return localStorage.getItem('token')
 }
 
+function getActiveSpaceId() {
+  return localStorage.getItem('espacoFinanceiroId')
+}
+
 async function request(path, options = {}) {
   const headers = {
     'Content-Type': 'application/json',
@@ -12,8 +16,12 @@ async function request(path, options = {}) {
   }
 
   const token = getToken()
+  const spaceId = getActiveSpaceId()
   if (token) {
     headers.Authorization = `Bearer ${token}`
+  }
+  if (spaceId) {
+    headers['X-Espaco-Financeiro-Id'] = spaceId
   }
 
   const res = await fetch(`${API_URL}${path}`, {
@@ -56,9 +64,32 @@ export const api = {
     return data
   },
 
-  logout: () => localStorage.removeItem('token'),
+  logout: () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('espacoFinanceiroId')
+  },
 
   isLoggedIn: () => !!getToken(),
+
+  getActiveSpaceId,
+
+  setActiveSpaceId: (id) => localStorage.setItem('espacoFinanceiroId', String(id)),
+
+  espacos: () => request('/api/v1/espacos'),
+
+  criarEspaco: (data) =>
+    request('/api/v1/espacos', { method: 'POST', body: JSON.stringify(data) }),
+
+  acessosEspaco: (id) => request(`/api/v1/espacos/${id}/acessos`),
+
+  convidarGestora: (id, email) =>
+    request(`/api/v1/espacos/${id}/convites`, { method: 'POST', body: JSON.stringify({ email }) }),
+
+  removerAcessoEspaco: (id, usuarioId) =>
+    request(`/api/v1/espacos/${id}/acessos/${usuarioId}`, { method: 'DELETE' }),
+
+  aceitarConvite: (token) =>
+    request('/api/v1/convites/aceitar', { method: 'POST', body: JSON.stringify({ token }) }),
 
   resumo: (inicio, fim) =>
     request(`/api/v1/dashboard/resumo?inicio=${inicio}&fim=${fim}`),

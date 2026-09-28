@@ -7,6 +7,8 @@ import com.gustavo.taskmanager.model.Categoria;
 import com.gustavo.taskmanager.repository.CategoriaRepository;
 import com.gustavo.taskmanager.service.CategoriaService;
 import com.gustavo.taskmanager.service.UsuarioAtualService;
+import com.gustavo.taskmanager.service.EspacoAtualService;
+import com.gustavo.taskmanager.model.EspacoFinanceiro;
 import com.gustavo.taskmanager.model.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,21 +21,24 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     private final CategoriaRepository repository;
     private final UsuarioAtualService usuarioAtualService;
+    private final EspacoAtualService espacoAtualService;
 
     @Override
     public CategoriaResponseDTO criar(CategoriaRequestDTO dto) {
+        EspacoFinanceiro espaco = espacoAtualService.obter();
+        Usuario usuario = usuarioAtual();
         Categoria categoria = Categoria.builder()
             .nome(dto.getNome())
-            .usuario(usuarioAtual())
+            .usuario(usuario)
+            .atualizadoPor(usuario)
+            .espaco(espaco)
             .build();
         return toDTO(repository.save(categoria));
     }
 
     @Override
     public List<CategoriaResponseDTO> listarTodas() {
-        List<Categoria> categorias = usuarioAtual() == null
-            ? repository.findAll()
-            : repository.findAllByUsuarioOrderByNomeAsc(usuarioAtual());
+        List<Categoria> categorias = repository.findAllByEspacoOrderByNomeAsc(espacoAtualService.obter());
         return categorias
             .stream()
             .map(this::toDTO)
@@ -49,6 +54,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     public CategoriaResponseDTO atualizar(Long id, CategoriaRequestDTO dto) {
         Categoria categoria = obterCategoria(id);
         categoria.setNome(dto.getNome());
+        categoria.setAtualizadoPor(usuarioAtual());
         return toDTO(repository.save(categoria));
     }
 
@@ -56,6 +62,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     public void desativar(Long id) {
         Categoria categoria = obterCategoria(id);
         categoria.setAtiva(false);
+        categoria.setAtualizadoPor(usuarioAtual());
         repository.save(categoria);
     }
 
@@ -64,6 +71,8 @@ public class CategoriaServiceImpl implements CategoriaService {
             .id(categoria.getId())
             .nome(categoria.getNome())
             .ativa(categoria.isAtiva())
+            .criadoPorUsuarioId(categoria.getUsuario() == null ? null : categoria.getUsuario().getId())
+            .atualizadoPorUsuarioId(categoria.getAtualizadoPor() == null ? null : categoria.getAtualizadoPor().getId())
             .dataCriacao(categoria.getDataCriacao())
             .build();
     }
@@ -71,9 +80,8 @@ public class CategoriaServiceImpl implements CategoriaService {
     private Categoria obterCategoria(Long id) {
         Categoria categoria = repository.findById(id)
             .orElseThrow(() -> new CategoriaNotFoundException(id));
-        Usuario usuario = usuarioAtual();
-        if (usuario != null && (categoria.getUsuario() == null
-                || !usuario.getId().equals(categoria.getUsuario().getId()))) {
+        EspacoFinanceiro espacoAtual = espacoAtualService.obter();
+        if (categoria.getEspaco() == null || !espacoAtual.getId().equals(categoria.getEspaco().getId())) {
             throw new CategoriaNotFoundException(id);
         }
         return categoria;

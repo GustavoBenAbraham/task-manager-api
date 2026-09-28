@@ -15,6 +15,8 @@ import com.gustavo.taskmanager.repository.CategoriaRepository;
 import com.gustavo.taskmanager.repository.LancamentoRepository;
 import com.gustavo.taskmanager.service.LancamentoService;
 import com.gustavo.taskmanager.service.UsuarioAtualService;
+import com.gustavo.taskmanager.service.EspacoAtualService;
+import com.gustavo.taskmanager.model.EspacoFinanceiro;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,10 +32,13 @@ public class LancamentoServiceImpl implements LancamentoService {
     private final ContaRepository contaRepository;
     private final CategoriaRepository categoriaRepository;
     private final UsuarioAtualService usuarioAtualService;
+    private final EspacoAtualService espacoAtualService;
 
     @Override
     public LancamentoResponseDTO criar(LancamentoRequestDTO dto) {
         log.info("Criando lançamento: {}", dto.getDescricao());
+        EspacoFinanceiro espaco = espacoAtualService.obter();
+        Usuario usuario = usuarioAtual();
         Categoria categoria = buscarCategoria(dto.getCategoriaId());
         Lancamento lancamento = Lancamento.builder()
             .descricao(dto.getDescricao())
@@ -43,7 +48,9 @@ public class LancamentoServiceImpl implements LancamentoService {
             .categoria(categoria != null ? categoria.getNome() : dto.getCategoria())
             .categoriaRelacionada(categoria)
             .conta(buscarConta(dto.getContaId()))
-            .usuario(usuarioAtual())
+            .usuario(usuario)
+            .atualizadoPor(usuario)
+            .espaco(espaco)
             .observacao(dto.getObservacao())
             .build();
 
@@ -55,11 +62,7 @@ public class LancamentoServiceImpl implements LancamentoService {
     @Override
     public List<LancamentoResponseDTO> listarTodos() {
         log.debug("Listando todos os lançamentos");
-        Usuario usuario = usuarioAtual();
-        List<Lancamento> lancamentos = usuario == null
-            ? repository.findAllByOrderByDataDesc()
-            : repository.findAllByUsuarioOrderByDataDesc(usuario);
-        return lancamentos
+        return repository.findAllByEspacoOrderByDataDesc(espacoAtualService.obter())
             .stream()
             .map(this::toDTO)
             .toList();
@@ -74,11 +77,7 @@ public class LancamentoServiceImpl implements LancamentoService {
     @Override
     public List<LancamentoResponseDTO> buscarPorTipo(TipoLancamento tipo) {
         log.debug("Buscando lançamentos por tipo: {}", tipo);
-        Usuario usuario = usuarioAtual();
-        List<Lancamento> lancamentos = usuario == null
-            ? repository.findByTipoOrderByDataDesc(tipo)
-            : repository.findByUsuarioAndTipoOrderByDataDesc(usuario, tipo);
-        return lancamentos
+        return repository.findByEspacoAndTipoOrderByDataDesc(espacoAtualService.obter(), tipo)
             .stream()
             .map(this::toDTO)
             .toList();
@@ -98,6 +97,7 @@ public class LancamentoServiceImpl implements LancamentoService {
         lancamento.setCategoriaRelacionada(categoria);
         lancamento.setConta(buscarConta(dto.getContaId()));
         lancamento.setObservacao(dto.getObservacao());
+        lancamento.setAtualizadoPor(usuarioAtual());
 
         LancamentoResponseDTO response = toDTO(repository.save(lancamento));
         log.info("Lançamento atualizado com sucesso: id={}", id);
@@ -125,6 +125,8 @@ public class LancamentoServiceImpl implements LancamentoService {
             .contaId(lancamento.getConta() != null ? lancamento.getConta().getId() : null)
             .contaNome(lancamento.getConta() != null ? lancamento.getConta().getNome() : null)
             .observacao(lancamento.getObservacao())
+            .criadoPorUsuarioId(lancamento.getUsuario() == null ? null : lancamento.getUsuario().getId())
+            .atualizadoPorUsuarioId(lancamento.getAtualizadoPor() == null ? null : lancamento.getAtualizadoPor().getId())
             .dataCriacao(lancamento.getDataCriacao())
             .dataAtualizacao(lancamento.getDataAtualizacao())
             .build();
@@ -133,9 +135,8 @@ public class LancamentoServiceImpl implements LancamentoService {
     private Conta buscarConta(Long contaId) {
         Conta conta = contaRepository.findById(contaId)
             .orElseThrow(() -> new ContaNotFoundException(contaId));
-        Usuario usuario = usuarioAtual();
-        if (usuario != null && (conta.getUsuario() == null
-                || !usuario.getId().equals(conta.getUsuario().getId()))) {
+        EspacoFinanceiro espaco = espacoAtualService.obter();
+        if (conta.getEspaco() == null || !espaco.getId().equals(conta.getEspaco().getId())) {
             throw new ContaNotFoundException(contaId);
         }
         return conta;
@@ -147,9 +148,8 @@ public class LancamentoServiceImpl implements LancamentoService {
         }
         Categoria categoria = categoriaRepository.findById(categoriaId)
             .orElseThrow(() -> new CategoriaNotFoundException(categoriaId));
-        Usuario usuario = usuarioAtual();
-        if (usuario != null && (categoria.getUsuario() == null
-                || !usuario.getId().equals(categoria.getUsuario().getId()))) {
+        EspacoFinanceiro espaco = espacoAtualService.obter();
+        if (categoria.getEspaco() == null || !espaco.getId().equals(categoria.getEspaco().getId())) {
             throw new CategoriaNotFoundException(categoriaId);
         }
         return categoria;
@@ -158,9 +158,8 @@ public class LancamentoServiceImpl implements LancamentoService {
     private Lancamento obterLancamento(Long id) {
         Lancamento lancamento = repository.findById(id)
             .orElseThrow(() -> new LancamentoNotFoundException(id));
-        Usuario usuario = usuarioAtual();
-        if (usuario != null && (lancamento.getUsuario() == null
-                || !usuario.getId().equals(lancamento.getUsuario().getId()))) {
+        EspacoFinanceiro espaco = espacoAtualService.obter();
+        if (lancamento.getEspaco() == null || !espaco.getId().equals(lancamento.getEspaco().getId())) {
             throw new LancamentoNotFoundException(id);
         }
         return lancamento;

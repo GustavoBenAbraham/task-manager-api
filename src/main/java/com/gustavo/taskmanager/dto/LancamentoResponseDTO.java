@@ -24,6 +24,8 @@ public class LancamentoResponseDTO {
     private Long contaId;
     private String contaNome;
     private String observacao;
+    private Long criadoPorUsuarioId;
+    private Long atualizadoPorUsuarioId;
     private LocalDateTime dataCriacao;
     private LocalDateTime dataAtualizacao;
 }

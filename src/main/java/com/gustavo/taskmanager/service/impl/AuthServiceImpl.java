@@ -8,6 +8,7 @@ import com.gustavo.taskmanager.model.Usuario;
 import com.gustavo.taskmanager.repository.UsuarioRepository;
 import com.gustavo.taskmanager.service.AuthService;
 import com.gustavo.taskmanager.service.JwtService;
+import com.gustavo.taskmanager.service.EspacoFinanceiroService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,6 +16,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,8 +26,10 @@ public class AuthServiceImpl implements AuthService {
     private final UsuarioRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EspacoFinanceiroService espacoFinanceiroService;
 
     @Override
+    @Transactional
     public void registrar(AuthRegisterRequestDTO dto) {
         log.info("Tentando registrar usuário: {}", dto.getEmail());
         if (repository.existsByEmailIgnoreCase(dto.getEmail())) {
@@ -38,7 +42,8 @@ public class AuthServiceImpl implements AuthService {
             .email(dto.getEmail().trim().toLowerCase())
             .senhaHash(passwordEncoder.encode(dto.getSenha()))
             .build();
-        repository.save(usuario);
+        Usuario usuarioSalvo = repository.save(usuario);
+        espacoFinanceiroService.criarEspacoPessoal(usuarioSalvo);
         log.info("Usuário registrado com sucesso: {}", usuario.getEmail());
     }
 

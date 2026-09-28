@@ -3,46 +3,35 @@ package com.gustavo.taskmanager.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "contas", uniqueConstraints =
-    @UniqueConstraint(name = "uk_contas_espaco_nome", columnNames = {"espaco_id", "nome"}))
+@Table(name = "espacos_financeiros", uniqueConstraints =
+    @UniqueConstraint(name = "uk_espaco_proprietario_tipo", columnNames = {"proprietario_id", "tipo"}))
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Conta {
+public class EspacoFinanceiro {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** User who created this account. */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id")
-    private Usuario usuario;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "espaco_id")
-    private EspacoFinanceiro espaco;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "atualizado_por_usuario_id")
-    private Usuario atualizadoPor;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "proprietario_id", nullable = false)
+    private Usuario proprietario;
 
     @Column(nullable = false, length = 100)
     private String nome;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private TipoConta tipo;
+    private TipoEspacoFinanceiro tipo;
 
-    @Column(name = "saldo_inicial", nullable = false, precision = 19, scale = 2)
-    @Builder.Default
-    private BigDecimal saldoInicial = BigDecimal.ZERO;
+    @Column(length = 14)
+    private String cnpj;
 
     @Column(nullable = false)
     @Builder.Default
@@ -57,7 +46,7 @@ public class Conta {
     @PrePersist
     protected void onCreate() {
         dataCriacao = LocalDateTime.now();
-        dataAtualizacao = LocalDateTime.now();
+        dataAtualizacao = dataCriacao;
     }
 
     @PreUpdate

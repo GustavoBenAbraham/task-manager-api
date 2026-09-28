@@ -8,6 +8,8 @@ import com.gustavo.taskmanager.repository.ContaRepository;
 import com.gustavo.taskmanager.repository.LancamentoRepository;
 import com.gustavo.taskmanager.service.ContaService;
 import com.gustavo.taskmanager.service.UsuarioAtualService;
+import com.gustavo.taskmanager.service.EspacoAtualService;
+import com.gustavo.taskmanager.model.EspacoFinanceiro;
 import com.gustavo.taskmanager.model.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,14 +24,19 @@ public class ContaServiceImpl implements ContaService {
     private final ContaRepository repository;
     private final LancamentoRepository lancamentoRepository;
     private final UsuarioAtualService usuarioAtualService;
+    private final EspacoAtualService espacoAtualService;
 
     @Override
     public ContaResponseDTO criar(ContaRequestDTO dto) {
+        EspacoFinanceiro espaco = espacoAtualService.obter();
+        Usuario usuario = usuarioAtual();
         Conta conta = Conta.builder()
             .nome(dto.getNome())
             .tipo(dto.getTipo())
             .saldoInicial(dto.getSaldoInicial())
-            .usuario(usuarioAtual())
+            .usuario(usuario)
+            .atualizadoPor(usuario)
+            .espaco(espaco)
             .build();
 
         return toDTO(repository.save(conta));
@@ -37,9 +44,7 @@ public class ContaServiceImpl implements ContaService {
 
     @Override
     public List<ContaResponseDTO> listarTodas() {
-        List<Conta> contas = usuarioAtual() == null
-            ? repository.findAll()
-            : repository.findAllByUsuarioOrderByNomeAsc(usuarioAtual());
+        List<Conta> contas = repository.findAllByEspacoOrderByNomeAsc(espacoAtualService.obter());
         return contas
             .stream()
             .map(this::toDTO)
@@ -58,6 +63,7 @@ public class ContaServiceImpl implements ContaService {
         conta.setNome(dto.getNome());
         conta.setTipo(dto.getTipo());
         conta.setSaldoInicial(dto.getSaldoInicial());
+        conta.setAtualizadoPor(usuarioAtual());
 
         return toDTO(repository.save(conta));
     }
@@ -66,6 +72,7 @@ public class ContaServiceImpl implements ContaService {
     public void desativar(Long id) {
         Conta conta = obterConta(id);
         conta.setAtivo(false);
+        conta.setAtualizadoPor(usuarioAtual());
         repository.save(conta);
     }
 
@@ -82,6 +89,8 @@ public class ContaServiceImpl implements ContaService {
             .saldoInicial(conta.getSaldoInicial())
             .saldoAtual(saldoAtual)
             .ativo(conta.isAtivo())
+            .criadoPorUsuarioId(conta.getUsuario() == null ? null : conta.getUsuario().getId())
+            .atualizadoPorUsuarioId(conta.getAtualizadoPor() == null ? null : conta.getAtualizadoPor().getId())
             .dataCriacao(conta.getDataCriacao())
             .dataAtualizacao(conta.getDataAtualizacao())
             .build();
@@ -90,9 +99,8 @@ public class ContaServiceImpl implements ContaService {
     private Conta obterConta(Long id) {
         Conta conta = repository.findById(id)
             .orElseThrow(() -> new ContaNotFoundException(id));
-        Usuario usuario = usuarioAtual();
-        if (usuario != null && (conta.getUsuario() == null
-                || !usuario.getId().equals(conta.getUsuario().getId()))) {
+        EspacoFinanceiro espacoAtual = espacoAtualService.obter();
+        if (conta.getEspaco() == null || !espacoAtual.getId().equals(conta.getEspaco().getId())) {
             throw new ContaNotFoundException(id);
         }
         return conta;
