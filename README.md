@@ -78,6 +78,7 @@ No PowerShell, defina a senha antes de executar a aplicação:
 ```powershell
 $env:DB_PASSWORD = "SUA_SENHA_DO_POSTGRES"
 $env:JWT_SECRET = "SUA_CHAVE_BASE64_FORTE"
+$env:SPRING_PROFILES_ACTIVE = "dev"
 ```
 
 Não publique a senha real no GitHub. Para ambientes compartilhados ou de produção, use variáveis de ambiente ou um gerenciador de segredos.
@@ -90,6 +91,9 @@ No Windows:
 
 No Linux/macOS:
 ```bash
+export DB_PASSWORD="SUA_SENHA_DO_POSTGRES"
+export JWT_SECRET="SUA_CHAVE_BASE64_FORTE"
+export SPRING_PROFILES_ACTIVE=dev
 ./mvnw spring-boot:run
 ```
 
@@ -283,29 +287,16 @@ src/main/java/com/gustavo/taskmanager/
 - [ ] Integrar gateway de pagamento e webhooks
 - [ ] Liberar recursos conforme o status da assinatura
 - [ ] Ampliar testes unitários, de integração e dos endpoints HTTP
-- [ ] Restringir CORS e externalizar configurações sensíveis
+- [x] Restringir CORS e externalizar configurações sensíveis
 - [x] Containerizar a aplicação com Docker
 - [ ] Configurar CI/CD com GitHub Actions
-- [ ] Fazer deploy na nuvem (Render - 100% Gratuito)
+- [ ] Publicar a imagem Docker em um provedor de nuvem
 
 ---
 
-## 🚀 Deploy Gratuito
+## Deploy
 
-A aplicação está pronta para deploy em serviços gratuitos:
-
-### Render (Recomendado - 100% Gratuito)
-- ✅ PostgreSQL grátis incluído
-- ✅ Deploy automático do GitHub
-- ✅ SSL/HTTPS grátis
-- ✅ App hiberna após 15min sem uso
-
-**Instruções detalhadas:** Veja `DEPLOY_RENDER.md`
-
-### Outras Opções
-- **Heroku Eco**: PostgreSQL grátis, deploy automático
-- **Oracle Cloud Always Free**: Mais recursos, setup mais complexo
-- **Azure App Service**: $30-45/mês (plano pago)
+O caminho recomendado é o Dockerfile da raiz, que compila o frontend e o backend na mesma imagem. As instruções atualizadas estão em `DEPLOY_RENDER.md`. O provedor e o banco podem ter custos e limites diferentes; confira as condições atuais antes de publicar.
 
 ---
 

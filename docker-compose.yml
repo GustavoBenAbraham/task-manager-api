@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   app:
     build: .
@@ -8,9 +7,11 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/taskmanager
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - APP_JWT_SECRET=${JWT_SECRET}
+      - SPRING_PROFILES_ACTIVE=prod
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - taskmanager-network
 
@@ -24,6 +25,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d taskmanager"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - taskmanager-network
 

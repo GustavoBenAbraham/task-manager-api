@@ -33,11 +33,14 @@ public class SecurityConfig {
             .cors(cors -> {})
             .sessionManagement(session -> session.sessionCreationPolicy(
                 org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
+            .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(
+                new org.springframework.security.web.authentication.HttpStatusEntryPoint(
+                    org.springframework.http.HttpStatus.UNAUTHORIZED)))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/health").permitAll()
-                .requestMatchers("/").permitAll()
+                .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll()
                 .requestMatchers("/error").permitAll()
                 .anyRequest().authenticated())
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -1,81 +1,49 @@
-# Deploy Gratuito no Render
+# Deploy no Render usando Docker
 
-## Por que Render?
-- ✅ 100% Gratuito
-- ✅ PostgreSQL grátis incluído
-- ✅ Deploy automático do GitHub
-- ✅ SSL/HTTPS grátis
-- ✅ Perfecto para Java/Spring Boot
+O Dockerfile da raiz compila o frontend React e a API Spring Boot na mesma imagem. Assim, o site e os endpoints ficam no mesmo domínio e o navegador não precisa de uma URL separada para a API.
 
-## Passo a Passo
+## 1. Criar o banco PostgreSQL
 
-### 1. Criar Conta Render
-1. Acesse: https://render.com
-2. Clique em "Sign Up"
-3. Faça login com GitHub (mais fácil)
+No painel do Render, crie um PostgreSQL e copie os dados da conexão **Internal**: host, porta, nome do banco, usuário e senha. A instância da aplicação e o banco devem estar na mesma região.
 
-### 2. Criar Web Service
-1. Após login, clique em "New +"
-2. Selecione "Web Service"
-3. Conecte seu GitHub
-4. Selecione o repositório: `GustavoBenAbraham/task-manager-api`
-5. Render vai detectar que é Java/Maven automaticamente
+## 2. Criar o serviço web
 
-### 3. Configurar Build
-Render vai detectar automaticamente:
-- **Build Command**: `./mvnw clean package -DskipTests`
-- **Start Command**: `java -jar target/taskmanager-0.0.1-SNAPSHOT.jar`
+Crie um Web Service conectado ao repositório e configure:
 
-Se não detectar, configure manualmente.
+- **Runtime:** Docker
+- **Dockerfile Path:** `./Dockerfile`
+- **Health Check Path:** `/api/v1/health`
 
-### 4. Criar PostgreSQL Database
-1. No mesmo projeto Render, clique em "New +"
-2. Selecione "PostgreSQL"
-3. Nome: `taskmanager-db`
-4. Plano: Free (gratuito)
-5. Clique em "Create Database"
+Não configure comandos Maven de build ou start; o Dockerfile faz o build das duas partes e inicia a aplicação.
 
-### 5. Configurar Variáveis de Ambiente
-No Web Service, vá em "Environment":
+## 3. Definir variáveis de ambiente
 
-```
-DB_PASSWORD = Hellen20!
-JWT_SECRET = bXlTdXBlclNlY3JldEtleUZvckpXVFRlc3RpbmdQdXJwb3Nlc011Y2hMb25nZXJUaGFuMjU2Qml0cw==
-SPRING_DATASOURCE_URL = jdbc:postgresql://<databases-internal-url>:5432/taskmanager
-SPRING_DATASOURCE_USERNAME = <username do banco>
-SPRING_PROFILES_ACTIVE = prod
+No serviço web, adicione:
+
+| Variável | Valor |
+| --- | --- |
+| `SPRING_PROFILES_ACTIVE` | `prod` |
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://HOST:PORT/NOME_DO_BANCO` usando o host e a porta internos do PostgreSQL |
+| `SPRING_DATASOURCE_USERNAME` | usuário informado pelo Render |
+| `SPRING_DATASOURCE_PASSWORD` | senha informada pelo Render |
+| `JWT_SECRET` | chave aleatória em Base64 com pelo menos 32 bytes |
+
+Gere uma chave localmente no PowerShell com:
+
+```powershell
+$random = [Security.Cryptography.RandomNumberGenerator]::Create()
+$keyBytes = New-Object byte[] 32
+$random.GetBytes($keyBytes)
+[Convert]::ToBase64String($keyBytes)
+$random.Dispose()
 ```
 
-**Importante:** Render vai fornecer a "Internal Database URL" automática.
-Use ela no SPRING_DATASOURCE_URL.
+Guarde o valor exibido como segredo no painel do Render e não o adicione ao Git.
 
-### 6. Deploy Automático
-Render vai fazer deploy automático quando você fizer push no GitHub.
+Se hospedar o frontend em outro domínio, configure `APP_CORS_ALLOWED_ORIGINS` com a origem exata, por exemplo `https://meu-site.exemplo.com`. Para o frontend incluído nesta imagem, não precisa configurar CORS.
 
-### 7. Acessar a Aplicação
-Render vai fornecer uma URL como:
-`https://taskmanager-api.onrender.com`
+## 4. Publicar e conferir
 
-## Limitações do Plano Gratuito
-- App "hiberna" após 15min sem uso (acorda em ~30s)
-- 512MB RAM (suficiente para sua aplicação)
-- PostgreSQL gratuito (1GB armazenamento)
+Faça o deploy pelo painel e abra a URL gerada pelo Render. A página inicial deve mostrar o formulário do DinDin; `/api/v1/health` deve retornar `status: UP`. Cadastre uma conta e entre para conferir a conexão com o banco.
 
-## Monitoramento
-- No Dashboard do Render, monitore logs
-- Acompanhe métricas de uso
-- PostgreSQL tem console grátis
-
-## Suporte
-Render tem excelente documentação e suporte gratuito.
-
-## Alternativa: Heroku Eco
-Se preferir Heroku, o processo é similar:
-1. Criar conta Heroku
-2. Criar app Heroku
-3. Conectar GitHub
-4. Adicionar PostgreSQL Hobby Dev
-5. Configurar variáveis de ambiente
-6. Deploy automático
-
-Heroku é um pouco mais complexo mas também tem plano gratuito.
+O plano e os limites de disponibilidade e armazenamento dependem das opções vigentes na sua conta Render. Consulte os valores no painel antes de escolher o banco e o serviço.

@@ -286,7 +286,7 @@ function App() {
                 </div>
               </div>
               <div style={{ padding: 8, lineHeight: 1.6 }}>
-                <p><strong>API:</strong> {import.meta.env.VITE_API_URL || 'https://task-manager-api-wmx2.onrender.com'}</p>
+                <p><strong>API:</strong> {import.meta.env.VITE_API_URL || window.location.origin}</p>
                 <p><strong>Lançamentos:</strong> {lancamentos.length}</p>
                 <p><strong>Contas:</strong> {contas.length}</p>
               </div>

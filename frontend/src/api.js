@@ -1,5 +1,5 @@
 // Remove barra final se houver, para evitar URLs com barra dupla (ex: base/ + /path)
-const API_URL = (import.meta.env.VITE_API_URL || 'https://task-manager-api-wmx2.onrender.com').replace(/\/$/, '')
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 
 function getToken() {
   return localStorage.getItem('token')
@@ -23,7 +23,13 @@ async function request(path, options = {}) {
 
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(text || `Erro ${res.status}`)
+    let message = text
+    try {
+      message = JSON.parse(text).message || text
+    } catch {
+      // Resposta sem JSON: mantém o texto original.
+    }
+    throw new Error(message || `Erro ${res.status}`)
   }
 
   // 204 No Content ou 201/200 com body vazio → retorna null sem tentar parsear
