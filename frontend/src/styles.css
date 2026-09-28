@@ -120,3 +120,14 @@ h1 { margin: 10px 0 5px; font-size: clamp(27px, 3vw, 39px); letter-spacing: -1.8
 .dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 4px; }
 .dialog-actions .primary-button { justify-content: center; }
 @media (max-width: 480px) { .form-columns { grid-template-columns: 1fr; }.dialog-card { padding: 19px; } }
+[hidden] { display: none !important; }
+.management-panel { margin-bottom: 17px; }
+.management-list { margin-top: 15px; }
+.management-row { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 9px 0; border-top: 1px solid #eeebe3; }
+.management-row.is-inactive, .account-row.is-inactive { opacity: .58; }
+.row-actions { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.danger-action { color: #bb6758; }
+.danger-action:hover { color: #a64737; }
+.empty-state { padding: 14px 0; color: var(--muted); font-size: 13px; }
+.transaction-row .row-actions { margin-left: 0; }
+@media (max-width: 700px) { .transaction-row .row-actions { gap: 4px; } .transaction-row .row-actions .more-button { padding: 3px; } }

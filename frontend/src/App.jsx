@@ -2,15 +2,12 @@ import { useEffect, useState } from 'react'
 import {
   ArrowDownLeft,
   ArrowUpRight,
-  Bell,
   ChevronDown,
-  CircleHelp,
-  CreditCard,
   LayoutDashboard,
   LogOut,
+  Pencil,
   Plus,
   Search,
-  Settings2,
   Sparkles,
   Tags,
   Trash2,
@@ -176,7 +173,7 @@ function App() {
         setResumo(r)
         setLancamentos(Array.isArray(l) ? l : [])
         setContas(Array.isArray(c) ? c : [])
-        setCategorias(Array.isArray(cats) ? cats.filter((item) => item.ativa) : [])
+        setCategorias(Array.isArray(cats) ? cats : [])
       })
       .catch((err) => setError(err.message || 'Erro ao carregar dados'))
       .finally(() => setLoading(false))
@@ -196,8 +193,16 @@ function App() {
     setLoading(true)
     setError('')
     try {
-      if (dialog === 'transaction') await api.criarLancamento(data)
-      else await api.criarConta(data)
+      if (dialog.type === 'transaction') {
+        if (dialog.item) await api.atualizarLancamento(dialog.item.id, data)
+        else await api.criarLancamento(data)
+      } else if (dialog.type === 'account') {
+        if (dialog.item) await api.atualizarConta(dialog.item.id, data)
+        else await api.criarConta(data)
+      } else if (dialog.type === 'category') {
+        if (dialog.item) await api.atualizarCategoria(dialog.item.id, data)
+        else await api.criarCategoria(data)
+      }
       setDialog(null)
       setReloadKey((key) => key + 1)
     } catch (err) {
@@ -216,6 +221,18 @@ function App() {
       setReloadKey((key) => key + 1)
     } catch (err) {
       setError(err.message || 'Não foi possível excluir o lançamento.')
+    }
+  }
+
+  async function desativarRegistro(type, item) {
+    const label = type === 'account' ? 'conta' : 'categoria'
+    if (!window.confirm(`Desativar ${label} “${item.nome}”?`)) return
+    try {
+      if (type === 'account') await api.desativarConta(item.id)
+      else await api.desativarCategoria(item.id)
+      setReloadKey((key) => key + 1)
+    } catch (err) {
+      setError(err.message || `Não foi possível desativar ${label}.`)
     }
   }
 
@@ -245,8 +262,6 @@ function App() {
           <NavItem icon={<ArrowUpRight size={18} />} label="Lançamentos" active={activeNav === 'Lançamentos'} onClick={() => setActiveNav('Lançamentos')} />
           <NavItem icon={<WalletCards size={18} />} label="Contas" active={activeNav === 'Contas'} onClick={() => setActiveNav('Contas')} />
           <NavItem icon={<Tags size={18} />} label="Categorias" active={activeNav === 'Categorias'} onClick={() => setActiveNav('Categorias')} />
-          <p className="nav-label second-label">Preferências</p>
-          <NavItem icon={<Settings2 size={18} />} label="Configurações" active={activeNav === 'Configurações'} onClick={() => setActiveNav('Configurações')} />
         </nav>
 
         <div className="sidebar-bottom">
@@ -272,8 +287,6 @@ function App() {
         <header className="topbar">
           <div className="breadcrumb"><span>Workspace</span><b>/</b><strong>{activeNav}</strong></div>
           <div className="topbar-actions">
-            <button className="icon-button" title="Ajuda"><CircleHelp size={18} /></button>
-            <button className="icon-button notification" title="Notificações"><Bell size={18} /><i /></button>
             <div className="top-avatar">EU</div>
           </div>
         </header>
@@ -287,12 +300,12 @@ function App() {
                 {loading ? 'Carregando dados da API...' : error ? error : 'Dados vindos da API no Render.'}
               </p>
             </div>
-            <button className="primary-button" onClick={() => { setError(''); setDialog('transaction') }} disabled={contas.length === 0} title={contas.length === 0 ? 'Cadastre uma conta primeiro' : undefined}><Plus size={18} /> Novo lançamento</button>
+            {(activeNav === 'Visão geral' || activeNav === 'Lançamentos') && <button className="primary-button" onClick={() => { setError(''); setDialog({ type: 'transaction' }) }} disabled={contas.every((conta) => !conta.ativo)} title={contas.every((conta) => !conta.ativo) ? 'Cadastre uma conta primeiro' : undefined}><Plus size={18} /> Novo lançamento</button>}
           </section>
 
           {error && <p role="alert" className="app-error">{error}</p>}
 
-          <section className="metric-grid">
+          <section className="metric-grid" hidden={activeNav !== 'Visão geral'}>
             <MetricCard
               label="Saldo disponível"
               value={formatMoney(resumo?.saldo ?? saldoContas)}
@@ -316,7 +329,7 @@ function App() {
             />
           </section>
 
-          <section className="main-grid">
+          <section className="main-grid" hidden={activeNav !== 'Visão geral'}>
             <div className="panel chart-panel">
               <div className="panel-heading">
                 <div>
@@ -337,7 +350,7 @@ function App() {
                   <p className="panel-kicker">Patrimônio</p>
                   <h2>Minhas contas</h2>
                 </div>
-                <button className="secondary-button" onClick={() => { setError(''); setDialog('account') }}><Plus size={15} /> Nova conta</button>
+                <button className="secondary-button" onClick={() => { setError(''); setDialog({ type: 'account' }) }}><Plus size={15} /> Nova conta</button>
               </div>
               <div className="account-total">
                 <span>Saldo total</span>
@@ -351,12 +364,30 @@ function App() {
                   color="sage"
                   name={conta.nome || conta.descricao || `Conta #${conta.id}`}
                   balance={formatMoney(conta.saldo ?? conta.saldoAtual ?? 0)}
+                  onEdit={() => setDialog({ type: 'account', item: conta })}
+                  onDeactivate={() => desativarRegistro('account', conta)}
                 />
               ))}
             </div>
           </section>
 
-          <section className="panel transactions-panel">
+          <section className="panel management-panel" hidden={activeNav !== 'Contas'}>
+            <div className="panel-heading"><div><p className="panel-kicker">Patrimônio</p><h2>Gerenciar contas</h2></div><button className="secondary-button" onClick={() => setDialog({ type: 'account' })}><Plus size={15} /> Nova conta</button></div>
+            <div className="management-list">
+              {contas.map((conta) => <AccountRow key={conta.id} icon={<WalletCards size={17} />} color="sage" name={conta.nome} balance={formatMoney(conta.saldoAtual)} inactive={!conta.ativo} onEdit={() => setDialog({ type: 'account', item: conta })} onDeactivate={() => desativarRegistro('account', conta)} />)}
+              {contas.length === 0 && <p className="empty-state">Você ainda não cadastrou contas.</p>}
+            </div>
+          </section>
+
+          <section className="panel management-panel" hidden={activeNav !== 'Categorias'}>
+            <div className="panel-heading"><div><p className="panel-kicker">Organização</p><h2>Gerenciar categorias</h2></div><button className="secondary-button" onClick={() => setDialog({ type: 'category' })}><Plus size={15} /> Nova categoria</button></div>
+            <div className="management-list">
+              {categorias.map((categoria) => <div className={`management-row ${categoria.ativa ? '' : 'is-inactive'}`} key={categoria.id}><div className="account-icon sage"><Tags size={17} /></div><div className="account-name"><strong>{categoria.nome}</strong><span>{categoria.ativa ? 'Ativa' : 'Inativa'}</span></div><div className="row-actions"><button className="more-button" title="Editar categoria" aria-label={`Editar ${categoria.nome}`} onClick={() => setDialog({ type: 'category', item: categoria })}><Pencil size={15} /></button>{categoria.ativa && <button className="more-button danger-action" title="Desativar categoria" aria-label={`Desativar ${categoria.nome}`} onClick={() => desativarRegistro('category', categoria)}><Trash2 size={15} /></button>}</div></div>)}
+              {categorias.length === 0 && <p className="empty-state">Você ainda não cadastrou categorias.</p>}
+            </div>
+          </section>
+
+          <section className="panel transactions-panel" hidden={activeNav !== 'Visão geral' && activeNav !== 'Lançamentos'}>
             <div className="panel-heading">
               <div>
                 <p className="panel-kicker">Movimentações</p>
@@ -376,6 +407,7 @@ function App() {
                 return (
                   <TransactionRow
                     key={item.id}
+                    onEdit={() => setDialog({ type: 'transaction', item })}
                     onDelete={() => excluirLancamento(item.id)}
                     transaction={{
                       title: item.descricao || `Lançamento #${item.id}`,
@@ -392,7 +424,7 @@ function App() {
           </section>
         </div>
       </main>
-      {dialog && <CadastroDialog type={dialog} contas={contas} categorias={categorias} onClose={() => setDialog(null)} onSave={salvarCadastro} loading={loading} />}
+      {dialog && <CadastroDialog key={`${dialog.type}-${dialog.item?.id || 'new'}`} type={dialog.type} item={dialog.item} contas={contas} categorias={categorias} onClose={() => setDialog(null)} onSave={salvarCadastro} loading={loading} />}
     </div>
   )
 }
@@ -418,20 +450,21 @@ function MetricCard({ label, value, detail, tone, icon }) {
   )
 }
 
-function AccountRow({ icon, color, name, balance, negative }) {
+function AccountRow({ icon, color, name, balance, negative, inactive, onEdit, onDeactivate }) {
   return (
-    <div className="account-row">
+    <div className={`account-row ${inactive ? 'is-inactive' : ''}`}>
       <div className={`account-icon ${color}`}>{icon}</div>
       <div className="account-name">
         <strong>{name}</strong>
-        <span>{negative ? 'Fatura em aberto' : 'Disponível'}</span>
+        <span>{inactive ? 'Inativa' : negative ? 'Fatura em aberto' : 'Disponível'}</span>
       </div>
       <b className={negative ? 'negative' : ''}>{balance}</b>
+      {onEdit && <div className="row-actions"><button className="more-button" title="Editar conta" aria-label={`Editar ${name}`} onClick={onEdit}><Pencil size={15} /></button>{onDeactivate && !inactive && <button className="more-button danger-action" title="Desativar conta" aria-label={`Desativar ${name}`} onClick={onDeactivate}><Trash2 size={15} /></button>}</div>}
     </div>
   )
 }
 
-function TransactionRow({ transaction, onDelete }) {
+function TransactionRow({ transaction, onEdit, onDelete }) {
   return (
     <div className="transaction-row">
       <div className={`transaction-icon ${transaction.color}`}>
@@ -443,22 +476,23 @@ function TransactionRow({ transaction, onDelete }) {
       </div>
       <time>{transaction.date}</time>
       <b className={transaction.type === 'income' ? 'income-text' : 'expense-text'}>{transaction.value}</b>
-      <button className="more-button" title="Excluir lançamento" aria-label={`Excluir ${transaction.title}`} onClick={onDelete}><Trash2 size={16} /></button>
+      <div className="row-actions"><button className="more-button" title="Editar lançamento" aria-label={`Editar ${transaction.title}`} onClick={onEdit}><Pencil size={15} /></button><button className="more-button danger-action" title="Excluir lançamento" aria-label={`Excluir ${transaction.title}`} onClick={onDelete}><Trash2 size={15} /></button></div>
     </div>
   )
 }
 
-function CadastroDialog({ type, contas, categorias, onClose, onSave, loading }) {
+function CadastroDialog({ type, item, contas, categorias, onClose, onSave, loading }) {
   const isTransaction = type === 'transaction'
+  const isAccount = type === 'account'
   const [form, setForm] = useState({
-    descricao: '', valor: '', tipo: 'DESPESA', data: new Date().toLocaleDateString('sv-SE'),
-    categoria: '', contaId: contas[0]?.id || '', observacao: '', nome: '',
-    tipoConta: 'CONTA_CORRENTE', saldoInicial: '0',
+    descricao: item?.descricao || '', valor: item?.valor ?? '', tipo: item?.tipo || 'DESPESA', data: item?.data || new Date().toLocaleDateString('sv-SE'),
+    categoria: item?.categoriaNome || item?.categoria || '', contaId: item?.contaId || contas.find((conta) => conta.ativo)?.id || '', observacao: item?.observacao || '', nome: item?.nome || '',
+    tipoConta: item?.tipo || 'CONTA_CORRENTE', saldoInicial: item?.saldoInicial ?? '0',
   })
   const [formError, setFormError] = useState('')
 
   function update(event) {
-    setForm({ ...form, [event.target.name]: event.target.value })
+    setForm((current) => ({ ...current, [event.target.name]: event.target.value }))
   }
 
   async function submit(event) {
@@ -466,13 +500,16 @@ function CadastroDialog({ type, contas, categorias, onClose, onSave, loading }) 
     setFormError('')
     try {
       if (isTransaction) {
+        const selectedCategory = categorias.find((category) => category.nome.toLocaleLowerCase('pt-BR') === form.categoria.trim().toLocaleLowerCase('pt-BR'))
         await onSave({
           descricao: form.descricao.trim(), valor: Number(form.valor), tipo: form.tipo,
-          data: form.data, categoria: form.categoria.trim(), contaId: Number(form.contaId),
+          data: form.data, categoria: form.categoria.trim(), categoriaId: selectedCategory?.id || null, contaId: Number(form.contaId),
           observacao: form.observacao.trim() || null,
         })
-      } else {
+      } else if (isAccount) {
         await onSave({ nome: form.nome.trim(), tipo: form.tipoConta, saldoInicial: Number(form.saldoInicial) })
+      } else {
+        await onSave({ nome: form.nome.trim() })
       }
     } catch (error) {
       setFormError(error.message || 'Não foi possível salvar.')
@@ -483,7 +520,7 @@ function CadastroDialog({ type, contas, categorias, onClose, onSave, loading }) 
     <div className="dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
         <div className="dialog-heading">
-          <div><p className="panel-kicker">DinDin de giro</p><h2 id="dialog-title">{isTransaction ? 'Novo lançamento' : 'Nova conta'}</h2></div>
+          <div><p className="panel-kicker">DinDin de giro</p><h2 id="dialog-title">{isTransaction ? item ? 'Editar lançamento' : 'Novo lançamento' : isAccount ? item ? 'Editar conta' : 'Nova conta' : item ? 'Editar categoria' : 'Nova categoria'}</h2></div>
           <button type="button" className="dialog-close" onClick={onClose} aria-label="Fechar">×</button>
         </div>
         <form className="dialog-form" onSubmit={submit}>
@@ -497,12 +534,14 @@ function CadastroDialog({ type, contas, categorias, onClose, onSave, loading }) 
               <label>Data<input name="data" type="date" required value={form.data} onChange={update} /></label>
               <label>Conta<select name="contaId" required value={form.contaId} onChange={update}><option value="">Selecione</option>{contas.filter((conta) => conta.ativo).map((conta) => <option key={conta.id} value={conta.id}>{conta.nome}</option>)}</select></label>
             </div>
-            <label>Categoria<input name="categoria" list="categorias-disponiveis" required maxLength="60" value={form.categoria} onChange={update} placeholder="Ex.: Alimentação" /><datalist id="categorias-disponiveis">{categorias.map((categoria) => <option key={categoria.id} value={categoria.nome} />)}</datalist></label>
+            <label>Categoria<input name="categoria" list="categorias-disponiveis" required maxLength="60" value={form.categoria} onChange={update} placeholder="Ex.: Alimentação" /><datalist id="categorias-disponiveis">{categorias.filter((categoria) => categoria.ativa).map((categoria) => <option key={categoria.id} value={categoria.nome} />)}</datalist></label>
             <label>Observação (opcional)<textarea name="observacao" maxLength="500" rows="3" value={form.observacao} onChange={update} /></label>
-          </> : <>
+          </> : isAccount ? <>
             <label>Nome da conta<input name="nome" required maxLength="100" value={form.nome} onChange={update} autoFocus /></label>
             <label>Tipo<select name="tipoConta" value={form.tipoConta} onChange={update}><option value="CONTA_CORRENTE">Conta corrente</option><option value="POUPANCA">Poupança</option><option value="CARTEIRA">Carteira</option><option value="CARTAO_CREDITO">Cartão de crédito</option><option value="OUTRA">Outra</option></select></label>
             <label>Saldo inicial (R$)<input name="saldoInicial" type="number" min="0" step="0.01" required value={form.saldoInicial} onChange={update} /></label>
+          </> : <>
+            <label>Nome da categoria<input name="nome" required maxLength="60" value={form.nome} onChange={update} autoFocus /></label>
           </>}
           {formError && <p role="alert" className="app-error">{formError}</p>}
           <div className="dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>Cancelar</button><button className="primary-button" type="submit" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</button></div>

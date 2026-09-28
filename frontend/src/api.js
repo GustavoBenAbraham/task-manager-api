@@ -68,6 +68,9 @@ export const api = {
   criarLancamento: (data) =>
     request('/api/v1/lancamentos', { method: 'POST', body: JSON.stringify(data) }),
 
+  atualizarLancamento: (id, data) =>
+    request(`/api/v1/lancamentos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
   excluirLancamento: (id) =>
     request(`/api/v1/lancamentos/${id}`, { method: 'DELETE' }),
 
@@ -76,5 +79,20 @@ export const api = {
   criarConta: (data) =>
     request('/api/v1/contas', { method: 'POST', body: JSON.stringify(data) }),
 
+  atualizarConta: (id, data) =>
+    request(`/api/v1/contas/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  desativarConta: (id) =>
+    request(`/api/v1/contas/${id}/desativar`, { method: 'PATCH' }),
+
   categorias: () => request('/api/v1/categorias'),
+
+  criarCategoria: (data) =>
+    request('/api/v1/categorias', { method: 'POST', body: JSON.stringify(data) }),
+
+  atualizarCategoria: (id, data) =>
+    request(`/api/v1/categorias/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  desativarCategoria: (id) =>
+    request(`/api/v1/categorias/${id}/desativar`, { method: 'PATCH' }),
 }
