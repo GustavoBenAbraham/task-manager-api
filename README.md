@@ -1,312 +1,163 @@
-# 📝 Task Manager API
+# DinDin de Giro
 
-![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
-![Flyway](https://img.shields.io/badge/Flyway-CC0200?style=for-the-badge&logo=flyway&logoColor=white)
+Aplicação web para organização financeira pessoal, com cadastro de usuários, autenticação JWT, API REST e dashboard em React.
 
-> API REST para gerenciamento de tarefas, construída com **Java 21**, **Spring Boot 4.1.1** e **PostgreSQL**.
+[![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![React](https://img.shields.io/badge/React-18-149ECA?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
 
----
+## Aplicação publicada
 
-## ✨ Funcionalidades
+- **Site:** [task-manager-api-wmx2.onrender.com](https://task-manager-api-wmx2.onrender.com)
+- **Health check:** [`/api/v1/health`](https://task-manager-api-wmx2.onrender.com/api/v1/health)
 
-- ✅ **CRUD completo** de tarefas (Criar, Listar, Buscar, Atualizar, Deletar)
-- ✅ **Lançamentos financeiros** de receitas e despesas
-- ✅ **Categorias financeiras** reutilizáveis
-- ✅ **Resumo financeiro por período** com receitas, despesas e saldo
-- ✅ **Cadastro e login** com senha protegida por BCrypt e token JWT
-- ✅ **Isolamento de dados** por usuário autenticado
-- ✅ **Valores monetários** com precisão decimal usando `BigDecimal`
-- ✅ **Filtro de lançamentos** por tipo (`RECEITA` ou `DESPESA`)
-- ✅ **Validação** de dados com Bean Validation
-- ✅ **Tratamento de erros** profissional com respostas JSON
-- ✅ **Filtro por status** (PENDENTE, EM_ANDAMENTO, CONCLUIDA, CANCELADA)
-- ✅ **Datas automáticas** de criação e atualização
-- ✅ **Migrações Flyway** para controle de versão do banco
-- ✅ **CORS** configurado para comunicação com frontend
+O serviço e o frontend foram verificados após o deploy. Em planos que suspendem serviços inativos, a primeira abertura pode demorar enquanto a aplicação inicia.
 
----
+## Funcionalidades implementadas
 
-## 🛠️ Tecnologias
+- Cadastro e login de usuários com senhas protegidas por BCrypt e autenticação JWT.
+- Separação de tarefas e dados financeiros por usuário autenticado.
+- API para gerenciar tarefas, contas, categorias e lançamentos financeiros.
+- Dashboard com resumo de receitas, despesas, saldo, contas e lançamentos recentes.
+- Persistência PostgreSQL com migrações Flyway.
+- Build Docker que reúne o frontend React e a API Spring Boot no mesmo serviço.
 
-### Backend
-- **Java 21** — Linguagem principal
-- **Spring Boot 4.1.1** — Framework web
-- **Spring Data JPA** — Persistência de dados
-- **Spring Validation** — Validação de dados
-- **PostgreSQL 17+** — Banco de dados relacional
-- **Flyway** — Migrações de banco de dados
-- **Lombok** — Redução de boilerplate
-- **Maven** — Gerenciamento de dependências
+### Limites atuais
 
----
+- A interface permite cadastrar, entrar e consultar o dashboard. Os controles de navegação e o botão “Novo lançamento” ainda são visuais; operações de criação e edição financeira estão disponíveis pela API, mas ainda não têm formulários na interface.
+- Cada conta gerencia os próprios dados. Ainda não existe um painel administrativo para listar ou administrar contas de outros usuários.
+- A API não inclui Swagger/OpenAPI neste momento.
 
-## 🚀 Como rodar localmente
+## Tecnologias
+
+- Java 21, Spring Boot, Spring Security, Spring Data JPA e Bean Validation
+- PostgreSQL e Flyway
+- JWT com JJWT e BCrypt
+- React 18, Vite e lucide-react
+- Maven e Docker Compose
+
+## Executar localmente com Docker
 
 ### Pré-requisitos
-- Java 21+
-- Maven (opcional, o Maven Wrapper já está incluído)
-- PostgreSQL 17+ (ou Docker)
 
-### 1. Clone o repositório
-```bash
-git clone https://github.com/GustavoBenAbraham/task-manager-api.git
-cd task-manager-api
-```
+- Docker Desktop em execução com suporte a containers Linux
+- Docker Compose v2 ou posterior
+- PowerShell no Windows para gerar automaticamente os segredos locais abaixo
 
-### 2. Configure o banco de dados
-Crie um banco chamado `taskmanager` no PostgreSQL:
-```sql
-CREATE DATABASE taskmanager;
-```
+Na raiz do repositório, crie um arquivo `.env` local com credenciais aleatórias. O arquivo é ignorado pelo Git:
 
-Ou use Docker:
-```bash
-docker run --name taskmanager-db -e POSTGRES_DB=taskmanager -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=defina_uma_senha -p 5432:5432 -d postgres:17
-```
-
-### 3. Configure as credenciais
-Edite `src/main/resources/application.properties` com as credenciais do seu PostgreSQL:
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/taskmanager
-spring.datasource.username=postgres
-spring.datasource.password=${DB_PASSWORD}
-```
-
-No PowerShell, defina a senha antes de executar a aplicação:
 ```powershell
-$env:DB_PASSWORD = "SUA_SENHA_DO_POSTGRES"
-$env:JWT_SECRET = "SUA_CHAVE_BASE64_FORTE"
-$env:SPRING_PROFILES_ACTIVE = "dev"
+if (-not (Test-Path .env)) {
+    $random = [Security.Cryptography.RandomNumberGenerator]::Create()
+    $dbBytes = New-Object byte[] 24
+    $jwtBytes = New-Object byte[] 32
+    $random.GetBytes($dbBytes)
+    $random.GetBytes($jwtBytes)
+    @(
+        "DB_PASSWORD=$([Convert]::ToBase64String($dbBytes))"
+        "JWT_SECRET=$([Convert]::ToBase64String($jwtBytes))"
+    ) | Set-Content -Path .env -Encoding Ascii
+    $random.Dispose()
+}
+
+docker compose up --build -d
 ```
 
-Não publique a senha real no GitHub. Para ambientes compartilhados ou de produção, use variáveis de ambiente ou um gerenciador de segredos.
+Abra [http://localhost:8080](http://localhost:8080). Para acompanhar a inicialização, use `docker compose logs -f app`. Para parar os serviços, use `docker compose down`; o volume do PostgreSQL é mantido.
 
-### 4. Execute o projeto
-No Windows:
+O `.env` guarda os segredos para reutilizar o banco entre reinicializações locais. Não o envie ao GitHub nem use esses valores em produção.
+
+### Executar o frontend com Vite (opcional)
+
+Com os serviços Docker ativos, o frontend também pode rodar separadamente para desenvolvimento:
+
 ```powershell
-.\mvnw.cmd spring-boot:run
-```
-
-No Linux/macOS:
-```bash
-export DB_PASSWORD="SUA_SENHA_DO_POSTGRES"
-export JWT_SECRET="SUA_CHAVE_BASE64_FORTE"
-export SPRING_PROFILES_ACTIVE=dev
-./mvnw spring-boot:run
-```
-
-O servidor iniciará em `http://localhost:8080`
-
-### Frontend
-
-O dashboard React fica em `frontend/` e usa Vite.
-
-Pré-requisito: Node.js 20+ e npm.
-
-```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-O frontend ficará disponível em `http://localhost:5173`.
+Abra [http://localhost:5173](http://localhost:5173). O Vite encaminha chamadas `/api` para a API local na porta 8080.
 
-### 5. Execute os testes
-```bash
-./mvnw test
-```
+## API
 
-No Windows PowerShell, use `./mvnw.cmd test`.
+As rotas de autenticação e health check são públicas. As demais exigem um JWT no cabeçalho `Authorization: Bearer <token>`.
 
----
+| Recurso | Rotas e métodos |
+| --- | --- |
+| Autenticação | `POST /api/v1/auth/register`, `POST /api/v1/auth/login` (públicas) |
+| Health | `GET /api/v1/health` (pública) |
+| Tarefas | `GET` e `POST /api/v1/tasks`; `GET`, `PUT` e `DELETE /api/v1/tasks/{id}`; filtros por status e paginação |
+| Contas | `GET` e `POST /api/v1/contas`; `GET` e `PUT /api/v1/contas/{id}`; `PATCH /api/v1/contas/{id}/desativar` |
+| Categorias | `GET` e `POST /api/v1/categorias`; `GET` e `PUT /api/v1/categorias/{id}`; `PATCH /api/v1/categorias/{id}/desativar` |
+| Lançamentos | `GET` e `POST /api/v1/lancamentos`; `GET`, `PUT` e `DELETE /api/v1/lancamentos/{id}`; filtro por tipo |
+| Dashboard | `GET /api/v1/dashboard/resumo?inicio=AAAA-MM-DD&fim=AAAA-MM-DD` |
 
-## 🔗 API Endpoints
-
-### Documentação Interativa
-A API possui documentação interativa com Swagger UI disponível em:
-- **Swagger UI**: `http://localhost:8080/swagger-ui.html`
-- **OpenAPI JSON**: `http://localhost:8080/v3/api-docs`
-
-### Tarefas
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| POST | `/api/v1/tasks` | Criar nova tarefa |
-| GET | `/api/v1/tasks` | Listar todas as tarefas |
-| GET | `/api/v1/tasks/paginado` | Listar tarefas com paginação (page, size, sort) |
-| GET | `/api/v1/tasks/{id}` | Buscar tarefa por ID |
-| GET | `/api/v1/tasks/status/{status}` | Filtrar por status (`PENDENTE`, `EM_ANDAMENTO`, `CONCLUIDA`, `CANCELADA`) |
-| GET | `/api/v1/tasks/status/{status}/paginado` | Filtrar por status com paginação |
-| PUT | `/api/v1/tasks/{id}` | Atualizar tarefa |
-| DELETE | `/api/v1/tasks/{id}` | Deletar tarefa |
-
-### Lançamentos financeiros
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| POST | `/api/v1/lancamentos` | Criar receita ou despesa |
-| GET | `/api/v1/lancamentos` | Listar lançamentos por data |
-| GET | `/api/v1/lancamentos/{id}` | Buscar lançamento por ID |
-| GET | `/api/v1/lancamentos/tipo/{tipo}` | Filtrar por tipo |
-| PUT | `/api/v1/lancamentos/{id}` | Atualizar lançamento |
-| DELETE | `/api/v1/lancamentos/{id}` | Deletar lançamento |
-
-### Contas financeiras
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| POST | `/api/v1/contas` | Criar conta |
-| GET | `/api/v1/contas` | Listar contas |
-| GET | `/api/v1/contas/{id}` | Buscar conta por ID |
-| PUT | `/api/v1/contas/{id}` | Atualizar conta |
-| PATCH | `/api/v1/contas/{id}/desativar` | Desativar conta |
-
-### Categorias financeiras
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| POST | `/api/v1/categorias` | Criar categoria |
-| GET | `/api/v1/categorias` | Listar categorias |
-| GET | `/api/v1/categorias/{id}` | Buscar categoria por ID |
-| PUT | `/api/v1/categorias/{id}` | Atualizar categoria |
-| PATCH | `/api/v1/categorias/{id}/desativar` | Desativar categoria |
-
-### Dashboard financeiro
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| GET | `/api/v1/dashboard/resumo?inicio=2026-09-01&fim=2026-09-30` | Resumo do período |
-
-Resposta:
+Exemplo de cadastro:
 
 ```json
 {
-    "inicio": "2026-09-01",
-    "fim": "2026-09-30",
-    "totalReceitas": 3000.00,
-    "totalDespesas": 1250.50,
-    "saldo": 1749.50
+  "nome": "Maria",
+  "email": "maria@example.com",
+  "senha": "uma-senha-com-8-caracteres"
 }
 ```
-
-### Autenticação
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| POST | `/api/v1/auth/register` | Criar usuário |
-| POST | `/api/v1/auth/login` | Autenticar e obter token JWT |
-
-Os demais endpoints exigem o token retornado no login:
-
-```http
-Authorization: Bearer SEU_TOKEN_JWT
-```
-
-Defina `JWT_SECRET` com uma chave Base64 forte antes de iniciar a aplicação.
 
 Exemplo de lançamento:
 
 ```json
 {
-    "descricao": "Supermercado",
-    "valor": 250.75,
-    "tipo": "DESPESA",
-    "data": "2026-09-20",
-    "categoria": "Alimentação",
-    "categoriaId": 1,
-    "contaId": 1,
-    "observacao": "Compras do mês"
+  "descricao": "Supermercado",
+  "valor": 250.75,
+  "tipo": "DESPESA",
+  "data": "2026-09-20",
+  "categoria": "Alimentação",
+  "contaId": 1,
+  "observacao": "Compras do mês"
 }
 ```
 
----
+## Publicar no Render
 
-## 📋 Exemplos de uso
+O [Dockerfile](Dockerfile) compila o React e a API na mesma imagem. Para configurar um novo serviço ou revisar o existente, siga [DEPLOY_RENDER.md](DEPLOY_RENDER.md). Não coloque senhas, URLs de banco com credenciais ou chaves JWT no repositório.
 
-### Criar tarefa (POST)
-```json
-{
-    "titulo": "Estudar Spring Boot",
-    "descricao": "Revisar conceitos de JPA e DTOs",
-    "status": "PENDENTE"
-}
+Variáveis principais do serviço:
+
+- `SPRING_PROFILES_ACTIVE=prod`
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+- `JWT_SECRET` (chave Base64 com pelo menos 32 bytes aleatórios)
+
+## Testes
+
+Execute a suíte automatizada com:
+
+```powershell
+.\mvnw.cmd test
 ```
 
-### Resposta
-```json
-{
-    "id": 1,
-    "titulo": "Estudar Spring Boot",
-    "descricao": "Revisar conceitos de JPA e DTOs",
-    "status": "PENDENTE",
-    "dataCriacao": "2026-08-26T12:00:00",
-    "dataAtualizacao": "2026-08-26T12:00:00"
-}
-```
+No Linux/macOS, use `./mvnw test`.
 
----
+## Estrutura do projeto
 
-## 🏗️ Arquitetura
-
-```
+```text
 src/main/java/com/gustavo/taskmanager/
-├── config/         # Configurações (CORS)
-├── controller/     # Endpoints REST
-├── dto/            # Objetos de transferência de dados
-├── exception/      # Tratamento de erros
-├── model/          # Entidades do banco
-├── repository/     # Acesso a dados
-└── service/        # Lógica de negócio
+├── config/       # Segurança e CORS
+├── controller/   # Rotas REST
+├── dto/          # Contratos de entrada e saída
+├── exception/    # Erros HTTP
+├── model/        # Entidades e enums
+├── repository/   # Persistência JPA
+└── service/      # Regras de negócio
+
+frontend/         # Aplicação React/Vite
+src/main/resources/db/migration/  # Migrações Flyway
 ```
 
----
-
-## 📚 O que aprendi com este projeto
-
-- ✅ Arquitetura em camadas (Controller, Service, Repository)
-- ✅ DTOs para separação entre modelo e API
-- ✅ Validação com Bean Validation (@Valid, @NotBlank, @Size)
-- ✅ Tratamento global de exceções com @RestControllerAdvice
-- ✅ Enumerações no banco de dados (@Enumerated)
-- ✅ Migrações de banco com Flyway
-- ✅ Configuração de CORS para frontend
-- ✅ Integração com PostgreSQL
-
----
-
-## 🎯 Próximos passos
-
-- [ ] Criar categorias financeiras e vinculá-las aos lançamentos
-- [ ] Implementar dashboard com saldo, receitas e despesas por período
-- [ ] Adicionar filtros por data e paginação nos lançamentos
-- [ ] Criar metas e orçamentos mensais
-- [x] Adicionar autenticação e autorização inicial com JWT
-- [ ] Criar planos e assinaturas de acesso
-- [ ] Integrar gateway de pagamento e webhooks
-- [ ] Liberar recursos conforme o status da assinatura
-- [ ] Ampliar testes unitários, de integração e dos endpoints HTTP
-- [x] Restringir CORS e externalizar configurações sensíveis
-- [x] Containerizar a aplicação com Docker
-- [ ] Configurar CI/CD com GitHub Actions
-- [ ] Publicar a imagem Docker em um provedor de nuvem
-
----
-
-## Deploy
-
-O caminho recomendado é o Dockerfile da raiz, que compila o frontend e o backend na mesma imagem. As instruções atualizadas estão em `DEPLOY_RENDER.md`. O provedor e o banco podem ter custos e limites diferentes; confira as condições atuais antes de publicar.
-
----
-
-## 👨‍💻 Autor
+## Autor
 
 **Gustavo Ben Abraham**
 
-[![GitHub](https://img.shields.io/badge/GitHub-@GustavoBenAbraham-181717?style=flat&logo=github)](https://github.com/GustavoBenAbraham)
-[![ORCID](https://img.shields.io/badge/ORCID-0009--0002--8023--217X-A6CE39?style=flat&logo=orcid)](https://orcid.org/0009-0002-8023-217X)
-
----
-
-> Projeto desenvolvido para fins de aprendizado e portfólio.
+[GitHub](https://github.com/GustavoBenAbraham) · [ORCID](https://orcid.org/0009-0002-8023-217X)
