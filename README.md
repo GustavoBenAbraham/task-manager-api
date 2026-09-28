@@ -161,3 +161,7 @@ src/main/resources/db/migration/  # Migrações Flyway
 **Gustavo Ben Abraham**
 
 [GitHub](https://github.com/GustavoBenAbraham) · [ORCID](https://orcid.org/0009-0002-8023-217X)
+
+## Licença
+
+Este projeto está licenciado sob a [Licença MIT](LICENSE).
