@@ -423,7 +423,7 @@ function App() {
               </p>
             </div>
             <div className="welcome-actions">
-              {!hasBusinessSpace && <button className="secondary-button" onClick={() => setDialog({ type: 'space' })}><Plus size={16} /> Criar espaço do negócio</button>}
+              {!hasOwnedBusinessSpace && <button className="secondary-button" onClick={() => setDialog({ type: 'space' })}><Plus size={16} /> Criar espaço do negócio</button>}
               {(activeNav === 'Visão geral' || activeNav === 'Lançamentos') && <button className="primary-button" onClick={() => { setError(''); setDialog({ type: 'transaction' }) }} disabled={contas.every((conta) => !conta.ativo)} title={contas.every((conta) => !conta.ativo) ? 'Cadastre uma conta primeiro' : undefined}><Plus size={18} /> Novo lançamento</button>}
             </div>
           </section>
