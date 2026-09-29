@@ -1,7 +1,9 @@
 package com.gustavo.taskmanager.service.impl;
 
 import com.gustavo.taskmanager.dto.DashboardResumoDTO;
+import com.gustavo.taskmanager.model.EspacoFinanceiro;
 import com.gustavo.taskmanager.repository.LancamentoRepository;
+import com.gustavo.taskmanager.service.EspacoAtualService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,6 +23,12 @@ class DashboardServiceImplTest {
     @Mock
     private LancamentoRepository repository;
 
+    @Mock
+    private EspacoAtualService espacoAtualService;
+
+    @Mock
+    private EspacoFinanceiro espaco;
+
     @InjectMocks
     private DashboardServiceImpl service;
 
@@ -28,7 +36,8 @@ class DashboardServiceImplTest {
     void deveCalcularSaldoDoPeriodo() {
         LocalDate inicio = LocalDate.of(2026, 9, 1);
         LocalDate fim = LocalDate.of(2026, 9, 30);
-        when(repository.buscarResumo(inicio, fim))
+        when(espacoAtualService.obter()).thenReturn(espaco);
+        when(repository.buscarResumoPorEspaco(espaco, inicio, fim))
             .thenReturn(new DashboardResumoDTO(new BigDecimal("3000.00"), new BigDecimal("1250.50")));
 
         DashboardResumoDTO response = service.resumo(inicio, fim);
@@ -44,7 +53,8 @@ class DashboardServiceImplTest {
     void deveRetornarSaldoZeradoQuandoNaoHouverMovimentacao() {
         LocalDate inicio = LocalDate.of(2026, 9, 1);
         LocalDate fim = LocalDate.of(2026, 9, 30);
-        when(repository.buscarResumo(inicio, fim))
+        when(espacoAtualService.obter()).thenReturn(espaco);
+        when(repository.buscarResumoPorEspaco(espaco, inicio, fim))
             .thenReturn(new DashboardResumoDTO(BigDecimal.ZERO, BigDecimal.ZERO));
 
         DashboardResumoDTO response = service.resumo(inicio, fim);
