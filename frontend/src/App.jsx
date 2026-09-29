@@ -30,7 +30,7 @@ function getMonthRange() {
   const now = new Date()
   const inicio = new Date(now.getFullYear(), now.getMonth(), 1)
   const fim = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-  const toIso = (d) => d.toISOString().slice(0, 10)
+  const toIso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   return { inicio: toIso(inicio), fim: toIso(fim) }
 }
 
@@ -151,6 +151,7 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(api.isLoggedIn())
   const [activeNav, setActiveNav] = useState('Visão geral')
   const [resumo, setResumo] = useState(null)
+  const [fluxoCaixa, setFluxoCaixa] = useState(null)
   const [lancamentos, setLancamentos] = useState([])
   const [titulos, setTitulos] = useState([])
   const [contas, setContas] = useState([])
@@ -231,15 +232,17 @@ function App() {
 
     Promise.all([
       api.resumo(inicio, fim).catch(() => null),
+      api.fluxoCaixa(inicio, fim).catch(() => null),
       api.lancamentos().catch(() => []),
       api.contas().catch(() => []),
       api.categorias().catch(() => []),
       activeSpace?.tipo === 'NEGOCIO' ? api.acessosEspaco(activeSpaceId).catch(() => []) : Promise.resolve([]),
       api.titulosFinanceiros().catch(() => []),
     ])
-      .then(([r, l, c, cats, accessList, titleList]) => {
+      .then(([r, cashFlow, l, c, cats, accessList, titleList]) => {
         if (cancelled) return
         setResumo(r)
+        setFluxoCaixa(cashFlow)
         setLancamentos(Array.isArray(l) ? l : [])
         setContas(Array.isArray(c) ? c : [])
         setCategorias(Array.isArray(cats) ? cats : [])
@@ -402,6 +405,7 @@ function App() {
           <NavItem icon={<WalletCards size={18} />} label="Contas" active={activeNav === 'Contas'} onClick={() => setActiveNav('Contas')} />
           <NavItem icon={<Tags size={18} />} label="Categorias" active={activeNav === 'Categorias'} onClick={() => setActiveNav('Categorias')} />
           {activeSpace?.tipo === 'NEGOCIO' && <NavItem icon={<UsersRound size={18} />} label="Gestora financeira" active={activeNav === 'Gestora financeira'} onClick={() => setActiveNav('Gestora financeira')} />}
+          <NavItem icon={<WalletCards size={18} />} label="Fluxo de caixa" active={activeNav === 'Fluxo de caixa'} onClick={() => setActiveNav('Fluxo de caixa')} />
           <NavItem icon={<CalendarDays size={18} />} label="A pagar e receber" active={activeNav === 'A pagar e receber'} onClick={() => setActiveNav('A pagar e receber')} />
         </nav>
 
@@ -531,6 +535,19 @@ function App() {
               {categorias.map((categoria) => <div className={`management-row ${categoria.ativa ? '' : 'is-inactive'}`} key={categoria.id}><div className="account-icon sage"><Tags size={17} /></div><div className="account-name"><strong>{categoria.nome}</strong><span>{categoria.ativa ? 'Ativa' : 'Inativa'}</span></div><div className="row-actions"><button className="more-button" title="Editar categoria" aria-label={`Editar ${categoria.nome}`} onClick={() => setDialog({ type: 'category', item: categoria })}><Pencil size={15} /></button>{categoria.ativa && <button className="more-button danger-action" title="Desativar categoria" aria-label={`Desativar ${categoria.nome}`} onClick={() => desativarRegistro('category', categoria)}><Trash2 size={15} /></button>}</div></div>)}
               {categorias.length === 0 && <p className="empty-state">Você ainda não cadastrou categorias.</p>}
             </div>
+          </section>
+
+          <section hidden={activeNav !== 'Fluxo de caixa'}>
+            <p className="management-description">Resumo deste mês. Previsões pendentes aparecem separadas das movimentações já realizadas e só entram no saldo projetado.</p>
+            <div className="metric-grid">
+              <MetricCard label="Saldo no início do mês" value={formatMoney(fluxoCaixa?.saldoInicial)} detail="Saldo inicial + histórico" tone="blue" icon={<WalletCards size={19} />} />
+              <MetricCard label="Recebido no mês" value={formatMoney(fluxoCaixa?.receitasRealizadas)} detail="Realizado" tone="green" icon={<ArrowDownLeft size={19} />} />
+              <MetricCard label="Pago no mês" value={formatMoney(fluxoCaixa?.despesasRealizadas)} detail="Realizado" tone="coral" icon={<ArrowUpRight size={19} />} />
+              <MetricCard label="A receber até o fim do mês" value={formatMoney(fluxoCaixa?.receitasPrevistas)} detail="Previsto e pendente" tone="blue" icon={<CalendarDays size={19} />} />
+              <MetricCard label="A pagar até o fim do mês" value={formatMoney(fluxoCaixa?.despesasPrevistas)} detail="Previsto e pendente" tone="coral" icon={<CalendarDays size={19} />} />
+              <MetricCard label="Saldo projetado no fim do mês" value={formatMoney(fluxoCaixa?.saldoProjetado)} detail="Realizado + previsão pendente" tone="green" icon={<CircleCheck size={19} />} />
+            </div>
+            <div className="panel management-panel"><p className="management-description"><strong>Como ler:</strong> o saldo projetado começa com o dinheiro disponível no início do mês, soma o que já entrou, subtrai o que já foi pago e considera as contas pendentes com vencimento neste mês. Contas canceladas e já liquidadas não entram nas previsões.</p></div>
           </section>
 
           <section className="panel management-panel" hidden={activeNav !== 'A pagar e receber'}>

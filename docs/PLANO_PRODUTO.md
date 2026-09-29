@@ -58,9 +58,9 @@ Concluir a revisão de permissões, migrations, experiência de convite e docume
 
 Registrar valores previstos com descrição, valor, vencimento, categoria e situação. Contas pendentes podem ser editadas ou canceladas. Ao informar a data e a conta do pagamento ou recebimento, o sistema cria uma movimentação realizada vinculada ao título, sem permitir liquidação duplicada. Os valores previstos não entram no saldo até a liquidação.
 
-### 3. Fluxo de caixa e saldos
+### 3. Fluxo de caixa e saldos — implementado localmente
 
-Mostrar saldo inicial, entradas, saídas e saldo atual com cálculos explicáveis e consistentes. Distinguir valores previstos dos já realizados.
+Mostrar saldo inicial, entradas e saídas realizadas, previsões pendentes e saldo projetado com um cálculo explicável. A tela inicial cobre o mês atual; a API aceita um intervalo de datas.
 
 ### 4. Visões e relatórios
 

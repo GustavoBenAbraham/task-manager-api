@@ -94,6 +94,9 @@ export const api = {
   resumo: (inicio, fim) =>
     request(`/api/v1/dashboard/resumo?inicio=${inicio}&fim=${fim}`),
 
+  fluxoCaixa: (inicio, fim) =>
+    request(`/api/v1/dashboard/fluxo-caixa?inicio=${inicio}&fim=${fim}`),
+
   lancamentos: () => request('/api/v1/lancamentos'),
 
   criarLancamento: (data) =>

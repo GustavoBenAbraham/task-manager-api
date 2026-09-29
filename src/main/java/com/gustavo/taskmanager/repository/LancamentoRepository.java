@@ -30,6 +30,16 @@ public interface LancamentoRepository extends JpaRepository<Lancamento, Long> {
         @Param("inicio") LocalDate inicio,
         @Param("fim") LocalDate fim);
 
+    @Query("""
+        select coalesce(sum(case when l.tipo = com.gustavo.taskmanager.model.TipoLancamento.RECEITA
+            then l.valor else -l.valor end), 0)
+        from Lancamento l
+        where l.espaco = :espaco and l.data < :inicio
+        """)
+    java.math.BigDecimal calcularSaldoMovimentacoesAntesDoPeriodo(
+        @Param("espaco") EspacoFinanceiro espaco,
+        @Param("inicio") LocalDate inicio);
+
     /**
      * Calcula o saldo atual de uma conta:
      * saldoInicial + receitas vinculadas - despesas vinculadas.

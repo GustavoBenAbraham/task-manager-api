@@ -26,6 +26,7 @@ O serviço pode levar alguns instantes para responder após um período sem uso,
 - Dashboard mensal, gestão de contas e categorias, e cadastro, edição e exclusão de lançamentos.
 - Contas previstas a pagar e a receber com vencimento, categoria, edição/cancelamento enquanto pendentes e liquidação em uma conta financeira.
 - Liquidar uma conta prevista cria uma única movimentação realizada; valores pendentes não alteram saldos nem o resumo de receitas/despesas realizadas.
+- Resumo mensal de fluxo de caixa mostra saldo inicial, valores realizados, previsões pendentes e saldo projetado em campos separados.
 - PostgreSQL com migrações Flyway. Docker reúne frontend React e API Spring Boot.
 
 ### Limites desta etapa
@@ -104,6 +105,7 @@ Todas as rotas, exceto autenticação e health check, exigem `Authorization: Bea
 | Categorias | `GET` e `POST /api/v1/categorias`; `GET` e `PUT /api/v1/categorias/{id}`; `PATCH /api/v1/categorias/{id}/desativar` |
 | Lançamentos | `GET` e `POST /api/v1/lancamentos`; `GET`, `PUT` e `DELETE /api/v1/lancamentos/{id}`; filtro por tipo |
 | Dashboard | `GET /api/v1/dashboard/resumo?inicio=AAAA-MM-DD&fim=AAAA-MM-DD` |
+| Fluxo de caixa | `GET /api/v1/dashboard/fluxo-caixa?inicio=AAAA-MM-DD&fim=AAAA-MM-DD` |
 
 Para criar um espaço de negócio, envie `nome`, `tipo: "NEGOCIO"` e, opcionalmente, `cnpj` para `POST /api/v1/espacos`. O convite só pode ser aceito por uma conta autenticada com o mesmo e-mail convidado.
 

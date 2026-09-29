@@ -1,6 +1,7 @@
 package com.gustavo.taskmanager.controller;
 
 import com.gustavo.taskmanager.dto.DashboardResumoDTO;
+import com.gustavo.taskmanager.dto.FluxoCaixaResumoDTO;
 import com.gustavo.taskmanager.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -24,5 +25,12 @@ public class DashboardController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
         return ResponseEntity.ok(dashboardService.resumo(inicio, fim));
+    }
+
+    @GetMapping("/fluxo-caixa")
+    public ResponseEntity<FluxoCaixaResumoDTO> fluxoCaixa(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
+        return ResponseEntity.ok(dashboardService.fluxoCaixa(inicio, fim));
     }
 }
