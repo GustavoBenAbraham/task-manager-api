@@ -26,6 +26,7 @@ public class LancamentoResponseDTO {
     private String observacao;
     private Long criadoPorUsuarioId;
     private Long atualizadoPorUsuarioId;
+    private boolean geradoDeContaPrevista;
     private LocalDateTime dataCriacao;
     private LocalDateTime dataAtualizacao;
 }

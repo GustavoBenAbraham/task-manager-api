@@ -24,6 +24,8 @@ O serviço pode levar alguns instantes para responder após um período sem uso,
 - A proprietária pode revogar o acesso da gestora.
 - Cada conta, categoria e lançamento registra quem criou o dado e quem fez a última alteração.
 - Dashboard mensal, gestão de contas e categorias, e cadastro, edição e exclusão de lançamentos.
+- Contas previstas a pagar e a receber com vencimento, categoria, edição/cancelamento enquanto pendentes e liquidação em uma conta financeira.
+- Liquidar uma conta prevista cria uma única movimentação realizada; valores pendentes não alteram saldos nem o resumo de receitas/despesas realizadas.
 - PostgreSQL com migrações Flyway. Docker reúne frontend React e API Spring Boot.
 
 ### Limites desta etapa
@@ -31,7 +33,7 @@ O serviço pode levar alguns instantes para responder após um período sem uso,
 - Convites são compartilhados manualmente por link e expiram em sete dias; o sistema ainda não envia e-mails.
 - Administração técnica da plataforma é diferente do papel de gestora financeira e ainda não foi implementada.
 - Há registro de criador e última pessoa que alterou, mas ainda não existe um histórico imutável de todas as alterações.
-- O módulo registra movimentações realizadas. Contas a pagar/receber, conciliação bancária e relatórios avançados ficam para etapas futuras.
+- O módulo diferencia valores previstos de movimentações realizadas. Conciliação bancária e relatórios avançados ficam para etapas futuras.
 - A API ainda não inclui Swagger/OpenAPI.
 
 ## Tecnologias
@@ -97,6 +99,7 @@ Todas as rotas, exceto autenticação e health check, exigem `Authorization: Bea
 | Espaços | `GET` e `POST /api/v1/espacos` |
 | Acessos | `GET /api/v1/espacos/{id}/acessos`; `DELETE /api/v1/espacos/{id}/acessos/{usuarioId}` |
 | Convites | `POST /api/v1/espacos/{id}/convites`; `POST /api/v1/convites/aceitar` |
+| Contas previstas | `GET` e `POST /api/v1/contas-previstas`; `PUT /api/v1/contas-previstas/{id}`; `POST /api/v1/contas-previstas/{id}/liquidar`; `PATCH /api/v1/contas-previstas/{id}/cancelar` |
 | Contas | `GET` e `POST /api/v1/contas`; `GET` e `PUT /api/v1/contas/{id}`; `PATCH /api/v1/contas/{id}/desativar` |
 | Categorias | `GET` e `POST /api/v1/categorias`; `GET` e `PUT /api/v1/categorias/{id}`; `PATCH /api/v1/categorias/{id}/desativar` |
 | Lançamentos | `GET` e `POST /api/v1/lancamentos`; `GET`, `PUT` e `DELETE /api/v1/lancamentos/{id}`; filtro por tipo |

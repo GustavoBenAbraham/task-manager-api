@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  CalendarDays,
+  CircleCheck,
   ChevronDown,
   LayoutDashboard,
   LogOut,
@@ -150,6 +152,7 @@ function App() {
   const [activeNav, setActiveNav] = useState('Visão geral')
   const [resumo, setResumo] = useState(null)
   const [lancamentos, setLancamentos] = useState([])
+  const [titulos, setTitulos] = useState([])
   const [contas, setContas] = useState([])
   const [categorias, setCategorias] = useState([])
   const [acessos, setAcessos] = useState([])
@@ -232,14 +235,16 @@ function App() {
       api.contas().catch(() => []),
       api.categorias().catch(() => []),
       activeSpace?.tipo === 'NEGOCIO' ? api.acessosEspaco(activeSpaceId).catch(() => []) : Promise.resolve([]),
+      api.titulosFinanceiros().catch(() => []),
     ])
-      .then(([r, l, c, cats, accessList]) => {
+      .then(([r, l, c, cats, accessList, titleList]) => {
         if (cancelled) return
         setResumo(r)
         setLancamentos(Array.isArray(l) ? l : [])
         setContas(Array.isArray(c) ? c : [])
         setCategorias(Array.isArray(cats) ? cats : [])
         setAcessos(Array.isArray(accessList) ? accessList : [])
+        setTitulos(Array.isArray(titleList) ? titleList : [])
       })
       .catch((err) => { if (!cancelled) setError(err.message || 'Erro ao carregar dados') })
       .finally(() => { if (!cancelled) setLoading(false) })
@@ -269,6 +274,11 @@ function App() {
       } else if (dialog.type === 'category') {
         if (dialog.item) await api.atualizarCategoria(dialog.item.id, data)
         else await api.criarCategoria(data)
+      } else if (dialog.type === 'title') {
+        if (dialog.item) await api.atualizarTituloFinanceiro(dialog.item.id, data)
+        else await api.criarTituloFinanceiro(data)
+      } else if (dialog.type === 'settlement') {
+        await api.liquidarTituloFinanceiro(dialog.item.id, data)
       } else if (dialog.type === 'space') {
         const createdSpace = await api.criarEspaco({ ...data, tipo: 'NEGOCIO' })
         api.setActiveSpaceId(createdSpace.id)
@@ -293,6 +303,16 @@ function App() {
       setReloadKey((key) => key + 1)
     } catch (err) {
       setError(err.message || 'Não foi possível excluir o lançamento.')
+    }
+  }
+
+  async function cancelarTitulo(titulo) {
+    if (!window.confirm(`Cancelar "${titulo.descricao}"?`)) return
+    try {
+      await api.cancelarTituloFinanceiro(titulo.id)
+      setReloadKey((key) => key + 1)
+    } catch (err) {
+      setError(err.message || 'Não foi possível cancelar esta conta.')
     }
   }
 
@@ -382,6 +402,7 @@ function App() {
           <NavItem icon={<WalletCards size={18} />} label="Contas" active={activeNav === 'Contas'} onClick={() => setActiveNav('Contas')} />
           <NavItem icon={<Tags size={18} />} label="Categorias" active={activeNav === 'Categorias'} onClick={() => setActiveNav('Categorias')} />
           {activeSpace?.tipo === 'NEGOCIO' && <NavItem icon={<UsersRound size={18} />} label="Gestora financeira" active={activeNav === 'Gestora financeira'} onClick={() => setActiveNav('Gestora financeira')} />}
+          <NavItem icon={<CalendarDays size={18} />} label="A pagar e receber" active={activeNav === 'A pagar e receber'} onClick={() => setActiveNav('A pagar e receber')} />
         </nav>
 
         <div className="sidebar-bottom">
@@ -512,6 +533,27 @@ function App() {
             </div>
           </section>
 
+          <section className="panel management-panel" hidden={activeNav !== 'A pagar e receber'}>
+            <div className="panel-heading"><div><p className="panel-kicker">Planejamento</p><h2>Contas a pagar e a receber</h2></div><button className="primary-button" onClick={() => setDialog({ type: 'title' })}><Plus size={15} /> Nova conta prevista</button></div>
+            <p className="management-description">Cadastre valores previstos. Eles não alteram o saldo até você registrar o pagamento ou recebimento.</p>
+            <div className="management-list">
+              {titulos.map((titulo) => {
+                const pendente = titulo.situacao === 'PENDENTE'
+                const vencida = pendente && titulo.dataVencimento < new Date().toLocaleDateString('sv-SE')
+                const pagar = titulo.tipo === 'A_PAGAR'
+                const situacao = titulo.situacao === 'PENDENTE' ? vencida ? 'Vencida' : 'Pendente' : titulo.situacao === 'PAGO' ? 'Paga' : titulo.situacao === 'RECEBIDO' ? 'Recebida' : 'Cancelada'
+                return <div className={`management-row ${!pendente ? 'is-inactive' : ''}`} key={titulo.id}>
+                  <div className={`account-icon ${pagar ? 'ochre' : 'sage'}`}>{pagar ? <ArrowUpRight size={17} /> : <ArrowDownLeft size={17} />}</div>
+                  <div className="account-name"><strong>{titulo.descricao}</strong><span>{pagar ? 'A pagar' : 'A receber'} · vence {titulo.dataVencimento} · {titulo.categoria} · {situacao}{titulo.dataLiquidacao ? ` em ${titulo.dataLiquidacao}` : ''}</span></div>
+                  <b className={pagar ? 'expense-text' : 'income-text'}>{formatMoney(titulo.valor)}</b>
+                  {pendente && <div className="row-actions"><button className="more-button" title="Editar conta prevista" aria-label={`Editar ${titulo.descricao}`} onClick={() => setDialog({ type: 'title', item: titulo })}><Pencil size={15} /></button><button className="secondary-button" onClick={() => setDialog({ type: 'settlement', item: titulo })}><CircleCheck size={15} /> {pagar ? 'Marcar paga' : 'Marcar recebida'}</button><button className="more-button danger-action" title="Cancelar conta prevista" aria-label={`Cancelar ${titulo.descricao}`} onClick={() => cancelarTitulo(titulo)}><Trash2 size={15} /></button></div>}
+                  {!pendente && titulo.lancamentoGeradoId && <span className="form-hint">Movimentação #{titulo.lancamentoGeradoId}</span>}
+                </div>
+              })}
+              {titulos.length === 0 && <p className="empty-state">Nenhuma conta prevista. Cadastre uma conta a pagar ou a receber.</p>}
+            </div>
+          </section>
+
           <section className="panel management-panel" hidden={activeNav !== 'Gestora financeira'}>
             <div className="panel-heading"><div><p className="panel-kicker">Acesso compartilhado</p><h2>Gestora financeira</h2></div></div>
             <p className="management-description">O cliente e a gestora trabalham sobre as mesmas contas e movimentações. A gestora não recebe acesso às finanças pessoais do cliente.</p>
@@ -547,6 +589,7 @@ function App() {
                     key={item.id}
                     onEdit={() => setDialog({ type: 'transaction', item })}
                     onDelete={() => excluirLancamento(item.id)}
+                    locked={item.geradoDeContaPrevista}
                     transaction={{
                       title: item.descricao || `Lançamento #${item.id}`,
                       category: [item.categoriaNome || item.categoria || item.tipo || '—', item.contaNome].filter(Boolean).join(' · '),
@@ -602,7 +645,7 @@ function AccountRow({ icon, color, name, balance, negative, inactive, onEdit, on
   )
 }
 
-function TransactionRow({ transaction, onEdit, onDelete }) {
+function TransactionRow({ transaction, onEdit, onDelete, locked }) {
   return (
     <div className="transaction-row">
       <div className={`transaction-icon ${transaction.color}`}>
@@ -614,17 +657,20 @@ function TransactionRow({ transaction, onEdit, onDelete }) {
       </div>
       <time>{transaction.date}</time>
       <b className={transaction.type === 'income' ? 'income-text' : 'expense-text'}>{transaction.value}</b>
-      <div className="row-actions"><button className="more-button" title="Editar lançamento" aria-label={`Editar ${transaction.title}`} onClick={onEdit}><Pencil size={15} /></button><button className="more-button danger-action" title="Excluir lançamento" aria-label={`Excluir ${transaction.title}`} onClick={onDelete}><Trash2 size={15} /></button></div>
+      {locked ? <span className="form-hint">Vinculado a uma conta liquidada</span> : <div className="row-actions"><button className="more-button" title="Editar lançamento" aria-label={`Editar ${transaction.title}`} onClick={onEdit}><Pencil size={15} /></button><button className="more-button danger-action" title="Excluir lançamento" aria-label={`Excluir ${transaction.title}`} onClick={onDelete}><Trash2 size={15} /></button></div>}
     </div>
   )
 }
 
 function CadastroDialog({ type, item, contas, categorias, onClose, onSave, loading }) {
   const isTransaction = type === 'transaction'
+  const isTitle = type === 'title'
+  const isSettlement = type === 'settlement'
   const isAccount = type === 'account'
   const isSpace = type === 'space'
   const [form, setForm] = useState({
     descricao: item?.descricao || '', valor: item?.valor ?? '', tipo: item?.tipo || 'DESPESA', data: item?.data || new Date().toLocaleDateString('sv-SE'),
+    tipoTitulo: item?.tipo || 'A_PAGAR', dataVencimento: item?.dataVencimento || new Date().toLocaleDateString('sv-SE'), dataLiquidacao: new Date().toLocaleDateString('sv-SE'),
     categoria: item?.categoriaNome || item?.categoria || '', contaId: item?.contaId || contas.find((conta) => conta.ativo)?.id || '', observacao: item?.observacao || '', nome: item?.nome || '',
     tipoConta: item?.tipo || 'CONTA_CORRENTE', saldoInicial: item?.saldoInicial ?? '0', cnpj: '',
   })
@@ -645,6 +691,15 @@ function CadastroDialog({ type, item, contas, categorias, onClose, onSave, loadi
           data: form.data, categoria: form.categoria.trim(), categoriaId: selectedCategory?.id || null, contaId: Number(form.contaId),
           observacao: form.observacao.trim() || null,
         })
+      } else if (isTitle) {
+        const selectedCategory = categorias.find((category) => category.nome.toLocaleLowerCase('pt-BR') === form.categoria.trim().toLocaleLowerCase('pt-BR'))
+        await onSave({
+          descricao: form.descricao.trim(), valor: Number(form.valor), tipo: form.tipoTitulo,
+          dataVencimento: form.dataVencimento, categoria: form.categoria.trim(), categoriaId: selectedCategory?.id || null,
+          observacao: form.observacao.trim() || null,
+        })
+      } else if (isSettlement) {
+        await onSave({ contaId: Number(form.contaId), dataLiquidacao: form.dataLiquidacao })
       } else if (isAccount) {
         await onSave({ nome: form.nome.trim(), tipo: form.tipoConta, saldoInicial: Number(form.saldoInicial) })
       } else if (isSpace) {
@@ -657,11 +712,19 @@ function CadastroDialog({ type, item, contas, categorias, onClose, onSave, loadi
     }
   }
 
+  const dialogTitle = isTitle
+    ? item ? 'Editar conta prevista' : 'Nova conta prevista'
+    : isSettlement ? item?.tipo === 'A_PAGAR' ? 'Registrar pagamento' : 'Registrar recebimento'
+    : isTransaction ? item ? 'Editar lançamento' : 'Novo lançamento'
+    : isAccount ? item ? 'Editar conta' : 'Nova conta'
+    : isSpace ? 'Criar espaço do negócio'
+    : item ? 'Editar categoria' : 'Nova categoria'
+
   return (
     <div className="dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
         <div className="dialog-heading">
-          <div><p className="panel-kicker">DinDin de giro</p><h2 id="dialog-title">{isTransaction ? item ? 'Editar lançamento' : 'Novo lançamento' : isAccount ? item ? 'Editar conta' : 'Nova conta' : isSpace ? 'Criar espaço do negócio' : item ? 'Editar categoria' : 'Nova categoria'}</h2></div>
+          <div><p className="panel-kicker">DinDin de giro</p><h2 id="dialog-title">{dialogTitle}</h2></div>
           <button type="button" className="dialog-close" onClick={onClose} aria-label="Fechar">×</button>
         </div>
         <form className="dialog-form" onSubmit={submit}>
@@ -677,6 +740,21 @@ function CadastroDialog({ type, item, contas, categorias, onClose, onSave, loadi
             </div>
             <label>Categoria<input name="categoria" list="categorias-disponiveis" required maxLength="60" value={form.categoria} onChange={update} placeholder="Ex.: Alimentação" /><datalist id="categorias-disponiveis">{categorias.filter((categoria) => categoria.ativa).map((categoria) => <option key={categoria.id} value={categoria.nome} />)}</datalist></label>
             <label>Observação (opcional)<textarea name="observacao" maxLength="500" rows="3" value={form.observacao} onChange={update} /></label>
+          </> : isTitle ? <>
+            <label>Descrição<input name="descricao" required maxLength="120" value={form.descricao} onChange={update} autoFocus /></label>
+            <div className="form-columns">
+              <label>Valor (R$)<input name="valor" type="number" required min="0.01" step="0.01" value={form.valor} onChange={update} /></label>
+              <label>Tipo<select name="tipoTitulo" value={form.tipoTitulo} onChange={update}><option value="A_PAGAR">A pagar</option><option value="A_RECEBER">A receber</option></select></label>
+            </div>
+            <div className="form-columns">
+              <label>Vencimento<input name="dataVencimento" type="date" required value={form.dataVencimento} onChange={update} /></label>
+              <label>Categoria<input name="categoria" list="categorias-previstas" required maxLength="60" value={form.categoria} onChange={update} /><datalist id="categorias-previstas">{categorias.filter((categoria) => categoria.ativa).map((categoria) => <option key={categoria.id} value={categoria.nome} />)}</datalist></label>
+            </div>
+            <label>Observação (opcional)<textarea name="observacao" maxLength="500" rows="3" value={form.observacao} onChange={update} /></label>
+          </> : isSettlement ? <>
+            <p className="form-hint">Ao confirmar, será criada uma movimentação e o saldo da conta será atualizado.</p>
+            <label>Conta financeira<select name="contaId" required value={form.contaId} onChange={update}><option value="">Selecione</option>{contas.filter((conta) => conta.ativo).map((conta) => <option key={conta.id} value={conta.id}>{conta.nome}</option>)}</select></label>
+            <label>Data do {item?.tipo === 'A_PAGAR' ? 'pagamento' : 'recebimento'}<input name="dataLiquidacao" type="date" required value={form.dataLiquidacao} onChange={update} /></label>
           </> : isAccount ? <>
             <label>Nome da conta<input name="nome" required maxLength="100" value={form.nome} onChange={update} autoFocus /></label>
             <label>Tipo<select name="tipoConta" value={form.tipoConta} onChange={update}><option value="CONTA_CORRENTE">Conta corrente</option><option value="POUPANCA">Poupança</option><option value="CARTEIRA">Carteira</option><option value="CARTAO_CREDITO">Cartão de crédito</option><option value="OUTRA">Outra</option></select></label>

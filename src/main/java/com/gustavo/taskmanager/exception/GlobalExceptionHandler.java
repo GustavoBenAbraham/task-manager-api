@@ -35,8 +35,14 @@ public class GlobalExceptionHandler {
         return resposta(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
+    @ExceptionHandler(OperacaoFinanceiraException.class)
+    public ResponseEntity<Map<String, Object>> handleOperacaoFinanceira(OperacaoFinanceiraException e) {
+        return resposta(HttpStatus.CONFLICT, e.getMessage());
+    }
+
     @ExceptionHandler({TaskNotFoundException.class, ContaNotFoundException.class,
-            CategoriaNotFoundException.class, LancamentoNotFoundException.class})
+            CategoriaNotFoundException.class, LancamentoNotFoundException.class,
+            TituloFinanceiroNotFoundException.class})
     public ResponseEntity<Map<String, Object>> handleNaoEncontrado(RuntimeException e) {
         return resposta(HttpStatus.NOT_FOUND, e.getMessage());
     }

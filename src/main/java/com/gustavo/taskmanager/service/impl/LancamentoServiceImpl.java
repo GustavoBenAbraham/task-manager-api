@@ -13,6 +13,8 @@ import com.gustavo.taskmanager.model.Usuario;
 import com.gustavo.taskmanager.repository.ContaRepository;
 import com.gustavo.taskmanager.repository.CategoriaRepository;
 import com.gustavo.taskmanager.repository.LancamentoRepository;
+import com.gustavo.taskmanager.repository.TituloFinanceiroRepository;
+import com.gustavo.taskmanager.exception.OperacaoFinanceiraException;
 import com.gustavo.taskmanager.service.LancamentoService;
 import com.gustavo.taskmanager.service.UsuarioAtualService;
 import com.gustavo.taskmanager.service.EspacoAtualService;
@@ -29,6 +31,7 @@ import java.util.List;
 public class LancamentoServiceImpl implements LancamentoService {
 
     private final LancamentoRepository repository;
+    private final TituloFinanceiroRepository tituloRepository;
     private final ContaRepository contaRepository;
     private final CategoriaRepository categoriaRepository;
     private final UsuarioAtualService usuarioAtualService;
@@ -85,8 +88,11 @@ public class LancamentoServiceImpl implements LancamentoService {
 
     @Override
     public LancamentoResponseDTO atualizar(Long id, LancamentoRequestDTO dto) {
-        log.info("Atualizando lançamento: id={}", id);
         Lancamento lancamento = obterLancamento(id);
+        if (tituloRepository.existsByLancamentoGerado_Id(id)) {
+            throw new OperacaoFinanceiraException("Esta movimentação pertence a uma conta liquidada e não pode ser editada aqui.");
+        }
+        log.info("Atualizando lançamento: id={}", id);
         Categoria categoria = buscarCategoria(dto.getCategoriaId());
 
         lancamento.setDescricao(dto.getDescricao());
@@ -106,8 +112,11 @@ public class LancamentoServiceImpl implements LancamentoService {
 
     @Override
     public void deletar(Long id) {
-        log.info("Deletando lançamento: id={}", id);
         obterLancamento(id);
+        if (tituloRepository.existsByLancamentoGerado_Id(id)) {
+            throw new OperacaoFinanceiraException("Esta movimentação pertence a uma conta liquidada e não pode ser excluída aqui.");
+        }
+        log.info("Deletando lançamento: id={}", id);
         repository.deleteById(id);
         log.info("Lançamento deletado com sucesso: id={}", id);
     }
@@ -127,6 +136,7 @@ public class LancamentoServiceImpl implements LancamentoService {
             .observacao(lancamento.getObservacao())
             .criadoPorUsuarioId(lancamento.getUsuario() == null ? null : lancamento.getUsuario().getId())
             .atualizadoPorUsuarioId(lancamento.getAtualizadoPor() == null ? null : lancamento.getAtualizadoPor().getId())
+            .geradoDeContaPrevista(tituloRepository.existsByLancamentoGerado_Id(lancamento.getId()))
             .dataCriacao(lancamento.getDataCriacao())
             .dataAtualizacao(lancamento.getDataAtualizacao())
             .build();

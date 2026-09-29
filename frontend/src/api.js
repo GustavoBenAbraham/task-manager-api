@@ -105,6 +105,20 @@ export const api = {
   excluirLancamento: (id) =>
     request(`/api/v1/lancamentos/${id}`, { method: 'DELETE' }),
 
+  titulosFinanceiros: () => request('/api/v1/contas-previstas'),
+
+  criarTituloFinanceiro: (data) =>
+    request('/api/v1/contas-previstas', { method: 'POST', body: JSON.stringify(data) }),
+
+  atualizarTituloFinanceiro: (id, data) =>
+    request(`/api/v1/contas-previstas/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  liquidarTituloFinanceiro: (id, data) =>
+    request(`/api/v1/contas-previstas/${id}/liquidar`, { method: 'POST', body: JSON.stringify(data) }),
+
+  cancelarTituloFinanceiro: (id) =>
+    request(`/api/v1/contas-previstas/${id}/cancelar`, { method: 'PATCH' }),
+
   contas: () => request('/api/v1/contas'),
 
   criarConta: (data) =>

@@ -38,7 +38,7 @@ O código desta etapa implementa:
 
 Os convites são criados na aplicação e compartilhados manualmente por link, válido por sete dias. O envio automático de e-mail ainda não foi configurado. O registro de criador e última alteração não substitui um histórico imutável de auditoria.
 
-As migrações `V8` e `V9` introduzem espaços e convites. Antes de aplicar em produção, faça backup e revise registros antigos sem usuário: dados sem proprietário identificável permanecem sem espaço e não aparecem nas consultas por espaço. A publicação das migrações altera o esquema do banco.
+As migrações `V8` e `V9` introduzem espaços e convites; `V10` cria as contas previstas. Antes de aplicar em produção, faça backup e revise registros antigos sem usuário: dados sem proprietário identificável permanecem sem espaço e não aparecem nas consultas por espaço. A publicação das migrações altera o esquema do banco.
 
 ## Como explicar o dinheiro
 
@@ -46,7 +46,7 @@ As migrações `V8` e `V9` introduzem espaços e convites. Antes de aplicar em p
 - **Realizado:** pagamento ou recebimento que já movimentou uma conta.
 - **Saldo:** dinheiro registrado nas contas após as movimentações realizadas.
 
-O módulo atual cobre movimentações realizadas. As contas a pagar e a receber pertencem a uma próxima etapa e devem manter a distinção entre previsto e realizado.
+O módulo cobre valores previstos e movimentações realizadas. Uma conta prevista só altera o saldo e o resumo realizado depois do pagamento ou recebimento.
 
 ## Etapas
 
@@ -54,9 +54,9 @@ O módulo atual cobre movimentações realizadas. As contas a pagar e a receber 
 
 Concluir a revisão de permissões, migrations, experiência de convite e documentação; depois validar em ambiente de publicação com backup. Proprietário e gestora devem ver o mesmo negócio, e nenhuma gestora deve conseguir selecionar ou consultar o espaço pessoal do cliente.
 
-### 2. Contas a pagar e a receber
+### 2. Contas a pagar e a receber — implementado localmente
 
-Registrar valores previstos com descrição, valor, vencimento, categoria e situação. Permitir registrar pagamento ou recebimento, incluindo a data e a conta onde o dinheiro se movimentou.
+Registrar valores previstos com descrição, valor, vencimento, categoria e situação. Contas pendentes podem ser editadas ou canceladas. Ao informar a data e a conta do pagamento ou recebimento, o sistema cria uma movimentação realizada vinculada ao título, sem permitir liquidação duplicada. Os valores previstos não entram no saldo até a liquidação.
 
 ### 3. Fluxo de caixa e saldos
 
