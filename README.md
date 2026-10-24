@@ -1,3 +1,5 @@
+**Português** | [English](README.en.md)
+
 # DinDin de Giro
 
 Aplicação web para organizar as finanças de pessoas autônomas, MEIs e pequenos negócios. O produto também permite manter um espaço pessoal separado do negócio.
